@@ -2,7 +2,7 @@
  * Card Component
  * 
  * Displays a single playing card with proper aspect ratio and styling.
- * Supports dark mode, hover states, and accessibility.
+ * Supports dark mode, hover states, accessibility, and ALT+hover preview.
  * 
  * @module components/game/Card
  */
@@ -33,19 +33,19 @@ function CardComponent({
   const [imageError, setImageError] = useState(false);
   const isClickable = onClick && !disabled;
   
-  // Base styles with aspect ratio
-  const baseStyles = 'relative aspect-[5/7] rounded-lg border-2 shadow-md transition-all duration-200';
+  // Base styles with aspect ratio - borderless
+  const baseStyles = 'relative aspect-[5/7] transition-all duration-200';
   
-  // Location-specific styles
+  // Location-specific styles (minimal background for empty state)
   const locationStyles = {
-    deck: 'bg-zinc-800 border-zinc-700 dark:bg-zinc-900 dark:border-zinc-800',
-    hand: 'bg-white border-zinc-300 dark:bg-zinc-800 dark:border-zinc-600',
-    playfield: 'bg-white border-zinc-300 dark:bg-zinc-800 dark:border-zinc-600',
+    deck: 'bg-zinc-800 dark:bg-zinc-900',
+    hand: 'bg-zinc-100 dark:bg-zinc-800',
+    playfield: 'bg-zinc-100 dark:bg-zinc-800',
   };
   
   // Interactive styles
   const interactiveStyles = isClickable
-    ? 'cursor-pointer hover:scale-105 hover:shadow-lg hover:border-blue-400 dark:hover:border-blue-500 active:scale-95'
+    ? 'cursor-pointer hover:scale-105 hover:shadow-xl active:scale-95'
     : '';
   
   // Disabled styles
@@ -72,54 +72,45 @@ function CardComponent({
   };
   
   return (
-    <div
-      className={cardClasses}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      role={isClickable ? 'button' : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}
-      aria-disabled={disabled}
-    >
-      {/* Card content */}
-      <div className="absolute inset-0 p-2 sm:p-3 flex flex-col justify-between">
-        {/* Card name - top */}
-        <div className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 break-words">
-          {card.name}
-        </div>
-        
-        {/* Card image placeholder - center */}
+    <>
+      <div
+        className={cardClasses}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}
+        aria-disabled={disabled}
+      >
+        {/* Card image - full size */}
         {card.imageUrl && !imageError ? (
-          <div className="flex-1 flex items-center justify-center relative">
-            <Image
-              src={card.imageUrl}
-              alt={card.name}
-              fill
-              className="object-contain"
-              onError={() => setImageError(true)}
-              unoptimized
-            />
-          </div>
+          <Image
+            src={card.imageUrl}
+            alt={card.name}
+            fill
+            className="object-cover"
+            onError={() => setImageError(true)}
+            unoptimized
+          />
         ) : (
-          <div className="flex-1 flex items-center justify-center flex-col gap-1">
-            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+          /* Fallback card with border and title when no image */
+          <div className="absolute inset-0 border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col items-center justify-center gap-3 p-3">
+            <div className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 text-center break-words">
+              {card.name}
+            </div>
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-200 dark:bg-zinc-700" />
             {imageError && (
-              <div className="text-[0.5rem] sm:text-xs text-red-500 dark:text-red-400 text-center px-1">
+              <div className="text-xs text-red-500 dark:text-red-400 text-center">
                 Image unavailable
               </div>
             )}
           </div>
         )}
         
-        {/* Card ID - bottom (for development) */}
-        <div className="text-[0.6rem] sm:text-xs text-zinc-500 dark:text-zinc-400 truncate">
-          {card.id.slice(0, 8)}
-        </div>
+        {/* Focus ring */}
+        <div className="absolute inset-0 ring-2 ring-transparent focus-within:ring-blue-500 dark:focus-within:ring-blue-400" />
       </div>
-      
-      {/* Focus ring */}
-      <div className="absolute inset-0 rounded-lg ring-2 ring-transparent focus-within:ring-blue-500 dark:focus-within:ring-blue-400" />
-    </div>
+    </>
   );
 }
 
