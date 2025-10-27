@@ -41,7 +41,7 @@ import type {
  * } = useGameState();
  */
 export function useGameState(): UseGameStateReturn {
-  const { loadGameState, saveGameState, isLoading: dbLoading, error: dbError } = useSupabase();
+  const { loadGameState, saveGameState, error: dbError } = useSupabase();
   const [sessionId] = useState(() => getSessionId());
   
   // Game state
@@ -50,8 +50,8 @@ export function useGameState(): UseGameStateReturn {
   const [playfield, setPlayfield] = useState<Playfield>({ cards: [] });
   const [deckMetadata, setDeckMetadata] = useState<DeckMetadata | undefined>(undefined);
   
-  // UI state
-  const [isLoading, setIsLoading] = useState(true);
+  // UI state - only for initial load, not for auto-saves
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
   
   // Refs for debouncing
@@ -63,7 +63,7 @@ export function useGameState(): UseGameStateReturn {
    */
   useEffect(() => {
     async function loadInitialState() {
-      setIsLoading(true);
+      setIsInitialLoading(true);
       setError(undefined);
       
       try {
@@ -108,7 +108,7 @@ export function useGameState(): UseGameStateReturn {
         setError(errorMessage);
         console.error('Error loading initial state:', err);
       } finally {
-        setIsLoading(false);
+        setIsInitialLoading(false);
         isInitialLoadRef.current = false;
       }
     }
@@ -263,7 +263,7 @@ export function useGameState(): UseGameStateReturn {
     hand,
     playfield,
     deckMetadata,
-    isLoading: isLoading || dbLoading,
+    isLoading: isInitialLoading,
     error: error || dbError,
     drawCard,
     playCard,
