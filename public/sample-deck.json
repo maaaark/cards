@@ -1,0 +1,185 @@
+{
+  "name": "Sample Fantasy Deck",
+  "cards": [
+    {
+      "id": "wizard-001",
+      "name": "Arcane Wizard",
+      "metadata": {
+        "type": "creature",
+        "power": 3,
+        "cost": 4
+      }
+    },
+    {
+      "id": "warrior-001",
+      "name": "Brave Knight",
+      "metadata": {
+        "type": "creature",
+        "power": 5,
+        "cost": 3
+      }
+    },
+    {
+      "id": "spell-001",
+      "name": "Fireball",
+      "metadata": {
+        "type": "spell",
+        "damage": 4,
+        "cost": 2
+      }
+    },
+    {
+      "id": "spell-002",
+      "name": "Lightning Bolt",
+      "metadata": {
+        "type": "spell",
+        "damage": 3,
+        "cost": 1
+      }
+    },
+    {
+      "id": "creature-001",
+      "name": "Ancient Dragon",
+      "metadata": {
+        "type": "creature",
+        "power": 10,
+        "cost": 8
+      }
+    },
+    {
+      "id": "creature-002",
+      "name": "Elven Archer",
+      "metadata": {
+        "type": "creature",
+        "power": 2,
+        "cost": 2
+      }
+    },
+    {
+      "id": "spell-003",
+      "name": "Healing Touch",
+      "metadata": {
+        "type": "spell",
+        "healing": 5,
+        "cost": 3
+      }
+    },
+    {
+      "id": "creature-003",
+      "name": "Goblin Scout",
+      "metadata": {
+        "type": "creature",
+        "power": 1,
+        "cost": 1
+      }
+    },
+    {
+      "id": "spell-004",
+      "name": "Ice Shield",
+      "metadata": {
+        "type": "spell",
+        "defense": 4,
+        "cost": 3
+      }
+    },
+    {
+      "id": "creature-004",
+      "name": "Shadow Assassin",
+      "metadata": {
+        "type": "creature",
+        "power": 4,
+        "cost": 4
+      }
+    },
+    {
+      "id": "spell-005",
+      "name": "Time Warp",
+      "metadata": {
+        "type": "spell",
+        "effect": "extra turn",
+        "cost": 6
+      }
+    },
+    {
+      "id": "creature-005",
+      "name": "Stone Golem",
+      "metadata": {
+        "type": "creature",
+        "power": 6,
+        "cost": 5
+      }
+    },
+    {
+      "id": "spell-006",
+      "name": "Mind Control",
+      "metadata": {
+        "type": "spell",
+        "effect": "steal creature",
+        "cost": 5
+      }
+    },
+    {
+      "id": "creature-006",
+      "name": "Forest Spirit",
+      "metadata": {
+        "type": "creature",
+        "power": 3,
+        "cost": 3
+      }
+    },
+    {
+      "id": "spell-007",
+      "name": "Meteor Storm",
+      "metadata": {
+        "type": "spell",
+        "damage": 7,
+        "cost": 6
+      }
+    },
+    {
+      "id": "creature-007",
+      "name": "Celestial Angel",
+      "metadata": {
+        "type": "creature",
+        "power": 7,
+        "cost": 6
+      }
+    },
+    {
+      "id": "spell-008",
+      "name": "Dark Ritual",
+      "metadata": {
+        "type": "spell",
+        "effect": "mana boost",
+        "cost": 1
+      }
+    },
+    {
+      "id": "creature-008",
+      "name": "Vampire Lord",
+      "metadata": {
+        "type": "creature",
+        "power": 5,
+        "cost": 5
+      }
+    },
+    {
+      "id": "spell-009",
+      "name": "Resurrection",
+      "metadata": {
+        "type": "spell",
+        "effect": "revive creature",
+        "cost": 4
+      }
+    },
+    {
+      "id": "creature-009",
+      "name": "Phoenix",
+      "metadata": {
+        "type": "creature",
+        "power": 4,
+        "cost": 4
+      }
+    }
+  ]
+}
