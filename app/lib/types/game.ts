@@ -28,6 +28,19 @@ export interface Card {
   
   /** Optional game-specific metadata (e.g., mana cost, card type, abilities) */
   metadata?: Record<string, unknown>;
+  
+  // Import tracking fields
+  /** Import source format (if card was imported) */
+  importSource?: 'tts' | 'json';
+  
+  /** Original TTS code (if imported from TTS format) */
+  ttsCode?: string;
+  
+  /** Original JSON ID (if imported from JSON format) */
+  jsonId?: string;
+  
+  /** Timestamp when card was imported */
+  importedAt?: Date;
 }
 
 /**

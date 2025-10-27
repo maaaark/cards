@@ -9,7 +9,7 @@
 
 'use client';
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import Image from 'next/image';
 import type { CardProps } from '@/app/lib/types/game';
 
@@ -30,6 +30,7 @@ function CardComponent({
   className = '',
   location,
 }: CardProps) {
+  const [imageError, setImageError] = useState(false);
   const isClickable = onClick && !disabled;
   
   // Base styles with aspect ratio
@@ -88,18 +89,25 @@ function CardComponent({
         </div>
         
         {/* Card image placeholder - center */}
-        {card.imageUrl ? (
+        {card.imageUrl && !imageError ? (
           <div className="flex-1 flex items-center justify-center relative">
             <Image
               src={card.imageUrl}
               alt={card.name}
               fill
               className="object-contain"
+              onError={() => setImageError(true)}
+              unoptimized
             />
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center flex-col gap-1">
             <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+            {imageError && (
+              <div className="text-[0.5rem] sm:text-xs text-red-500 dark:text-red-400 text-center px-1">
+                Image unavailable
+              </div>
+            )}
           </div>
         )}
         
