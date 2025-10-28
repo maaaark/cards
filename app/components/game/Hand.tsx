@@ -28,7 +28,7 @@ import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 export function Hand({ hand, onPlayCard, onCardDragStart }: HandProps) {
   const isEmpty = hand.cards.length === 0;
   const handRef = useRef<HTMLDivElement>(null);
-  const { setDropZoneConfig } = useDragAndDrop();
+  const { dragState, setDropZoneConfig } = useDragAndDrop();
   
   // Calculate and update hand bounds for drop detection
   useEffect(() => {
@@ -91,25 +91,32 @@ export function Hand({ hand, onPlayCard, onCardDragStart }: HandProps) {
           // Cards display
           <div className="p-4 overflow-x-auto">
             <div className="flex gap-3 sm:gap-4 justify-center min-w-min">
-              {hand.cards.map((card, index) => (
-                <div
-                  key={card.id}
-                  role="listitem"
-                  className="flex-shrink-0"
-                  style={{
-                    // Slight stagger animation for visual interest
-                    animation: `slideUp 0.3s ease-out ${index * 0.05}s both`,
-                  }}
-                >
-                  <Card
-                    card={card}
-                    location="hand"
-                    onClick={() => onPlayCard(card.id)}
-                    draggable={true}
-                    onDragStart={handleCardDragStart}
-                  />
-                </div>
-              ))}
+              {hand.cards.map((card, index) => {
+                const isBeingDragged = dragState.isDragging && dragState.draggedCardId === card.id;
+                return (
+                  <div
+                    key={card.id}
+                    role="listitem"
+                    className="flex-shrink-0"
+                    style={{
+                      // Slight stagger animation for visual interest
+                      animation: `slideUp 0.3s ease-out ${index * 0.05}s both`,
+                      // Hide card when being dragged
+                      opacity: isBeingDragged ? 0.3 : 1,
+                      pointerEvents: isBeingDragged ? 'none' : 'auto',
+                    }}
+                  >
+                    <Card
+                      card={card}
+                      location="hand"
+                      onClick={() => onPlayCard(card.id)}
+                      draggable={true}
+                      isDragging={isBeingDragged}
+                      onDragStart={handleCardDragStart}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

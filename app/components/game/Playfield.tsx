@@ -96,6 +96,32 @@ export function Playfield({
       };
     }
     
+    // If card is from hand, immediately place it on playfield at cursor position
+    if (!isOnPlayfield && playfieldRef.current && onMoveCardToPlayfield) {
+      const playfieldRect = playfieldRef.current.getBoundingClientRect();
+      const cardElement = event.currentTarget as HTMLElement;
+      const cardRect = cardElement.getBoundingClientRect();
+      
+      // Calculate offset (where on the card user clicked)
+      const offsetX = event.clientX - cardRect.left;
+      const offsetY = event.clientY - cardRect.top;
+      
+      // Calculate position in playfield coordinates (accounting for offset)
+      const x = event.clientX - playfieldRect.left - offsetX;
+      const y = event.clientY - playfieldRect.top - offsetY;
+      
+      // Immediately move card to playfield
+      onMoveCardToPlayfield(card.id, {
+        cardId: card.id,
+        x,
+        y,
+        zIndex: playfield.nextZIndex,
+      });
+      
+      // Set custom offset for consistent dragging
+      customOffset = { x: offsetX, y: offsetY };
+    }
+    
     startDrag({
       card,
       source,
@@ -111,27 +137,20 @@ export function Playfield({
     const dropZone = getDropZone({ x: event.clientX, y: event.clientY });
     const playfieldElement = playfieldRef.current;
     
+    // Check if card is on playfield
+    const isOnPlayfield = playfield.cards.some(c => c.id === dragState.draggedCardId);
+    
     // Handle drop based on zone
-    if (dropZone === 'playfield' && playfieldElement) {
+    if (dropZone === 'playfield' && playfieldElement && isOnPlayfield) {
+      // Card is already on playfield (either was there, or we moved it on mousedown)
+      // Update position if it was repositioned
       const rect = playfieldElement.getBoundingClientRect();
       // Account for the offset (where on the card the user clicked)
       const x = event.clientX - rect.left - dragState.offset.x;
       const y = event.clientY - rect.top - dragState.offset.y;
       
-      // Check if card is already on playfield (repositioning)
-      const isOnPlayfield = playfield.cards.some(c => c.id === dragState.draggedCardId);
-      
-      if (isOnPlayfield && onUpdateCardPosition) {
-        // Update existing card position
+      if (onUpdateCardPosition) {
         onUpdateCardPosition(dragState.draggedCardId, {
-          cardId: dragState.draggedCardId,
-          x,
-          y,
-          zIndex: playfield.nextZIndex,
-        });
-      } else if (onMoveCardToPlayfield) {
-        // Move from hand to playfield
-        onMoveCardToPlayfield(dragState.draggedCardId, {
           cardId: dragState.draggedCardId,
           x,
           y,
@@ -140,13 +159,11 @@ export function Playfield({
       }
     } else if (dropZone === 'hand' && onMoveCardToHand) {
       // Move from playfield to hand
-      const isOnPlayfield = playfield.cards.some(c => c.id === dragState.draggedCardId);
       if (isOnPlayfield) {
         onMoveCardToHand(dragState.draggedCardId);
       }
     } else if (dropZone === 'discard' && onDiscardCard) {
       // Discard card permanently
-      const isOnPlayfield = playfield.cards.some(c => c.id === dragState.draggedCardId);
       if (isOnPlayfield) {
         onDiscardCard(dragState.draggedCardId);
       }
