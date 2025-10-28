@@ -160,7 +160,7 @@ function GamePageInner() {
       {/* Hand - fixed at bottom */}
       <Hand hand={hand} onPlayCard={playCard} />
 
-      {/* Card preview overlay (renders when ALT+hover) */}
+      {/* Card preview overlay (renders when CTRL+hover) */}
       {previewState.isActive && previewState.card && previewPosition && (
         <CardPreview
           card={previewState.card}

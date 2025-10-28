@@ -1,8 +1,8 @@
 /**
  * AltKeyContext
  * 
- * Global React Context for tracking ALT key state.
- * Provides centralized ALT key press detection for the entire application.
+ * Global React Context for tracking CTRL key state.
+ * Provides centralized CTRL key press detection for the entire application.
  * 
  * @module contexts/AltKeyContext
  */
@@ -33,7 +33,7 @@ interface AltKeyProviderProps {
 /**
  * AltKeyProvider Component
  * 
- * Manages global ALT key state using two keyboard event listeners.
+ * Manages global CTRL key state using two keyboard event listeners.
  * Attaches listeners on mount, detaches on unmount.
  * 
  * Performance: Uses exactly 2 event listeners (keydown, keyup).
@@ -51,27 +51,31 @@ export function AltKeyProvider({ children }: AltKeyProviderProps) {
   useEffect(() => {
     /**
      * Handle keydown event.
-     * Sets isAltPressed to true when ALT is pressed.
+     * Sets isAltPressed to true when CTRL is pressed.
+     * Prevents default browser menu behavior.
      */
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Alt') {
+      if (event.key === 'Control') {
+        event.preventDefault();
         setIsAltPressed(true);
       }
     };
 
     /**
      * Handle keyup event.
-     * Sets isAltPressed to false when ALT is released.
+     * Sets isAltPressed to false when CTRL is released.
+     * Prevents default browser menu behavior.
      */
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Alt') {
+      if (event.key === 'Control') {
+        event.preventDefault();
         setIsAltPressed(false);
       }
     };
 
     /**
      * Handle window blur event.
-     * Resets ALT state when window loses focus to prevent stuck ALT key.
+     * Resets CTRL state when window loses focus to prevent stuck CTRL key.
      */
     const handleBlur = () => {
       setIsAltPressed(false);

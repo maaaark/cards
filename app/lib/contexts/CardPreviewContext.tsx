@@ -40,7 +40,7 @@ interface CardPreviewProviderProps {
  * CardPreviewProvider Component
  * 
  * Manages card preview state and mouse tracking.
- * Automatically hides preview when ALT key is released.
+ * Automatically hides preview when CTRL key is released.
  * Uses requestAnimationFrame for smooth 60fps position updates.
  * 
  * Performance: Conditionally attaches mousemove listener only when preview is active.
@@ -65,18 +65,15 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
 
   /**
    * Show preview for a card.
-   * Only activates if ALT key is pressed.
+   * Tracks the hovered card regardless of CTRL state.
    */
   const showPreview = useCallback((card: Card) => {
-    if (!isAltPressed) return;
-
     setPreviewState(prev => ({
       ...prev,
-      isActive: true,
       card,
       hoveredCardId: card.id,
     }));
-  }, [isAltPressed]);
+  }, []);
 
   /**
    * Hide preview.
@@ -88,7 +85,6 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
       
       return {
         ...prev,
-        isActive: false,
         card: null,
         hoveredCardId: null,
       };
@@ -108,20 +104,22 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
   }, []);
 
   /**
-   * Derived state: preview is only active if both ALT is pressed AND preview was activated.
-   * This automatically hides the preview when ALT is released.
+   * Derived state: preview is only active if CTRL is pressed AND a card is hovered.
+   * This automatically shows preview when CTRL is pressed while hovering,
+   * and hides it when CTRL is released.
    */
   const effectivePreviewState: PreviewState = {
     ...previewState,
-    isActive: previewState.isActive && isAltPressed,
+    isActive: isAltPressed && previewState.card !== null,
   };
 
   /**
-   * Attach mousemove listener when preview is active.
-   * Detach when preview is inactive for performance.
+   * Attach mousemove listener when a card is hovered (to track position).
+   * This ensures mouse position is known when CTRL is pressed.
    */
   useEffect(() => {
-    if (!effectivePreviewState.isActive) return;
+    // Track mouse position whenever a card is hovered OR preview is active
+    if (!previewState.card && !effectivePreviewState.isActive) return;
 
     let rafId: number | null = null;
     let latestX = previewState.mouseX;
@@ -139,6 +137,15 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
       }
     };
 
+    // Immediately capture current mouse position if it's still at 0,0
+    if (previewState.mouseX === 0 && previewState.mouseY === 0) {
+      const captureInitialPosition = (event: MouseEvent) => {
+        updateMousePosition(event.clientX, event.clientY);
+        window.removeEventListener('mousemove', captureInitialPosition);
+      };
+      window.addEventListener('mousemove', captureInitialPosition, { once: true });
+    }
+
     window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
@@ -147,7 +154,7 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
         cancelAnimationFrame(rafId);
       }
     };
-  }, [effectivePreviewState.isActive, previewState.mouseX, previewState.mouseY, updateMousePosition]);
+  }, [previewState.card, effectivePreviewState.isActive, previewState.mouseX, previewState.mouseY, updateMousePosition]);
 
   return (
     <CardPreviewContext.Provider
