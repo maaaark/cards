@@ -13,6 +13,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../supabase/client';
 import type { GameState, Deck, Hand, Playfield, DeckMetadata } from '../types/game';
 import type { UseSupabaseReturn } from '../types/game';
+import type { GameSessionRow, GameSessionInsert } from '../types/database';
 
 /**
  * Hook for Supabase database operations.
@@ -48,7 +49,7 @@ export function useSupabase(): UseSupabaseReturn {
         .from('game_sessions')
         .select('*')
         .eq('session_id', sessionId)
-        .single();
+        .single<GameSessionRow>();
 
       if (fetchError) {
         // If no session found, return null (not an error)
@@ -115,7 +116,7 @@ export function useSupabase(): UseSupabaseReturn {
 
     try {
       // Prepare data for database
-      const dbData = {
+      const dbData: GameSessionInsert = {
         session_id: sessionId,
         deck_state: {
           cards: state.deck.cards,
@@ -139,7 +140,7 @@ export function useSupabase(): UseSupabaseReturn {
       // Upsert (insert or update)
       const { error: upsertError } = await supabase
         .from('game_sessions')
-        .upsert(dbData, {
+        .upsert(dbData as never, {
           onConflict: 'session_id',
         });
 

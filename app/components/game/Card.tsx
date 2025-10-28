@@ -12,6 +12,7 @@
 import { memo, useState } from 'react';
 import Image from 'next/image';
 import type { CardProps } from '@/app/lib/types/game';
+import { useCardPreview } from '@/app/lib/hooks/useCardPreview';
 
 /**
  * Card component with standard trading card aspect ratio (5:7).
@@ -31,6 +32,7 @@ function CardComponent({
   location,
 }: CardProps) {
   const [imageError, setImageError] = useState(false);
+  const { showPreview, hidePreview } = useCardPreview();
   const isClickable = onClick && !disabled;
   
   // Base styles with aspect ratio - borderless
@@ -70,6 +72,15 @@ function CardComponent({
       onClick(card);
     }
   };
+
+  // Preview handlers
+  const handleMouseEnter = () => {
+    showPreview(card);
+  };
+
+  const handleMouseLeave = () => {
+    hidePreview(card.id);
+  };
   
   return (
     <>
@@ -77,6 +88,8 @@ function CardComponent({
         className={cardClasses}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
         aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}

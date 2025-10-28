@@ -16,11 +16,15 @@ import { Hand } from '@/app/components/game/Hand';
 import { DeckImport } from '@/app/components/game/DeckImport';
 import { Button } from '@/app/components/ui/Button';
 import { ThemeToggle } from '@/app/components/ui/ThemeToggle';
+import { AltKeyProvider } from '@/app/lib/contexts/AltKeyContext';
+import { CardPreviewProvider } from '@/app/lib/contexts/CardPreviewContext';
+import { CardPreview } from '@/app/components/game/CardPreview';
+import { useCardPreview } from '@/app/lib/hooks/useCardPreview';
 
 /**
- * Game page component.
+ * Inner game page component (needs to be inside providers).
  */
-export default function GamePage() {
+function GamePageInner() {
   const {
     deck,
     hand,
@@ -32,6 +36,8 @@ export default function GamePage() {
     isLoading,
     error,
   } = useGameState();
+
+  const { previewState, previewPosition, previewDimensions } = useCardPreview();
 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -153,6 +159,28 @@ export default function GamePage() {
       
       {/* Hand - fixed at bottom */}
       <Hand hand={hand} onPlayCard={playCard} />
+
+      {/* Card preview overlay (renders when ALT+hover) */}
+      {previewState.isActive && previewState.card && previewPosition && (
+        <CardPreview
+          card={previewState.card}
+          position={previewPosition}
+          dimensions={previewDimensions}
+        />
+      )}
     </main>
+  );
+}
+
+/**
+ * Game page component with providers.
+ */
+export default function GamePage() {
+  return (
+    <AltKeyProvider>
+      <CardPreviewProvider>
+        <GamePageInner />
+      </CardPreviewProvider>
+    </AltKeyProvider>
   );
 }

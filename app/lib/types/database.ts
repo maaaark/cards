@@ -12,7 +12,7 @@ import type { Card } from './game';
 /**
  * Database schema type.
  */
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       game_sessions: {
@@ -22,7 +22,7 @@ export interface Database {
       };
     };
   };
-}
+};
 
 /**
  * Game session row from database.
