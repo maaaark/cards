@@ -11,6 +11,7 @@
 
 import { useState } from 'react';
 import { useGameState } from '@/app/lib/hooks/useGameState';
+import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 import { Playfield } from '@/app/components/game/Playfield';
 import { Hand } from '@/app/components/game/Hand';
 import { DeckImport } from '@/app/components/game/DeckImport';
@@ -20,6 +21,7 @@ import { AltKeyProvider } from '@/app/lib/contexts/AltKeyContext';
 import { CardPreviewProvider } from '@/app/lib/contexts/CardPreviewContext';
 import { CardPreview } from '@/app/components/game/CardPreview';
 import { useCardPreview } from '@/app/lib/hooks/useCardPreview';
+import type { Card } from '@/app/lib/types/game';
 
 /**
  * Inner game page component (needs to be inside providers).
@@ -35,11 +37,39 @@ function GamePageInner() {
     resetGame,
     isLoading,
     error,
+    moveCardToPlayfield,
+    updateCardPosition,
+    moveCardToHand,
+    discardCard,
   } = useGameState();
 
   const { previewState, previewPosition, previewDimensions } = useCardPreview();
+  const { startDrag } = useDragAndDrop();
 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  
+  // Handle card drag start from hand or playfield
+  const handleCardDragStart = (card: Card, event: React.MouseEvent) => {
+    // Determine source based on where the card is
+    const isOnPlayfield = playfield.cards.some(c => c.id === card.id);
+    const source = isOnPlayfield ? 'playfield' : 'hand';
+    
+    // Get original position if on playfield
+    const originalPosition = isOnPlayfield
+      ? playfield.positions.get(card.id)
+      : undefined;
+    
+    const originalPositionWithCardId = originalPosition
+      ? { ...originalPosition, cardId: card.id }
+      : undefined;
+    
+    startDrag({
+      card,
+      source,
+      event,
+      originalPosition: originalPositionWithCardId,
+    });
+  };
 
   const handleImport = (deckImport: { name: string; cards: Array<{ id: string; name: string; imageUrl?: string; metadata?: Record<string, unknown> }> }) => {
     importDeck(deckImport);
@@ -155,10 +185,18 @@ function GamePageInner() {
         playfield={playfield}
         deck={deck}
         onDrawCard={drawCard}
+        onMoveCardToPlayfield={moveCardToPlayfield}
+        onUpdateCardPosition={updateCardPosition}
+        onMoveCardToHand={moveCardToHand}
+        onDiscardCard={discardCard}
       />
       
       {/* Hand - fixed at bottom */}
-      <Hand hand={hand} onPlayCard={playCard} />
+      <Hand 
+        hand={hand} 
+        onPlayCard={playCard}
+        onCardDragStart={handleCardDragStart}
+      />
 
       {/* Card preview overlay (renders when ALT+hover) */}
       {previewState.isActive && previewState.card && previewPosition && (
