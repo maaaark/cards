@@ -77,13 +77,16 @@ export interface Playfield {
   /** Cards currently on the playfield */
   cards: Card[];
   
-  /** Optional card positions (for future drag/drop support) */
-  positions?: Map<string, Position>;
+  /** Card positions for drag/drop support (REQUIRED for drag-drop) */
+  positions: Map<string, CardPosition>;
+  
+  /** Next available z-index value (auto-increments) */
+  nextZIndex: number;
 }
 
 /**
  * Represents a card's position on the playfield.
- * Used for future drag-and-drop functionality.
+ * Used for drag-and-drop functionality.
  */
 export interface Position {
   /** X coordinate in pixels */
@@ -94,6 +97,14 @@ export interface Position {
   
   /** Stacking order (higher = on top) */
   zIndex: number;
+}
+
+/**
+ * Card position with ID for drag-and-drop operations.
+ */
+export interface CardPosition extends Position {
+  /** Card ID */
+  cardId: string;
 }
 
 /**
@@ -248,6 +259,13 @@ export interface CardProps {
   
   /** Card location context (for styling) */
   location: 'deck' | 'hand' | 'playfield';
+  
+  /** Drag and drop props */
+  draggable?: boolean;
+  isDragging?: boolean;
+  position?: CardPosition;
+  dragOffset?: { x: number; y: number }; // Offset during drag for transform
+  onDragStart?: (card: Card, event: React.MouseEvent) => void;
 }
 
 /**
@@ -273,6 +291,9 @@ export interface HandProps {
   
   /** Handler for playing a card */
   onPlayCard: (cardId: string) => void;
+  
+  /** Handler for starting a card drag operation */
+  onCardDragStart?: (card: Card, event: React.MouseEvent) => void;
 }
 
 /**
@@ -287,6 +308,18 @@ export interface PlayfieldProps {
   
   /** Handler for drawing a card */
   onDrawCard: () => void;
+  
+  /** Handler for moving a card from hand to playfield */
+  onMoveCardToPlayfield?: (cardId: string, position: CardPosition) => void;
+  
+  /** Handler for updating position of a card already on playfield */
+  onUpdateCardPosition?: (cardId: string, position: CardPosition) => void;
+  
+  /** Handler for moving a card from playfield back to hand */
+  onMoveCardToHand?: (cardId: string) => void;
+  
+  /** Handler for discarding a card from playfield */
+  onDiscardCard?: (cardId: string) => void;
 }
 
 /**
@@ -337,6 +370,18 @@ export interface UseGameStateReturn {
   
   /** Reset game state */
   resetGame: () => void;
+  
+  /** Move a card from hand to playfield at specified position */
+  moveCardToPlayfield: (cardId: string, position: CardPosition) => void;
+  
+  /** Update position of a card already on the playfield */
+  updateCardPosition: (cardId: string, position: CardPosition) => void;
+  
+  /** Move a card from playfield back to hand */
+  moveCardToHand: (cardId: string) => void;
+  
+  /** Discard a card from playfield (remove from game) */
+  discardCard: (cardId: string) => void;
 }
 
 /**
@@ -376,7 +421,11 @@ export type GameAction =
   | { type: 'PLAY_CARD'; payload: { cardId: string } }
   | { type: 'IMPORT_DECK'; payload: { deck: DeckImport } }
   | { type: 'RESET_GAME' }
-  | { type: 'LOAD_STATE'; payload: { state: GameState } };
+  | { type: 'LOAD_STATE'; payload: { state: GameState } }
+  | { type: 'MOVE_CARD_TO_PLAYFIELD'; payload: { cardId: string; position: CardPosition } }
+  | { type: 'UPDATE_CARD_POSITION'; payload: { cardId: string; position: CardPosition } }
+  | { type: 'MOVE_CARD_TO_HAND'; payload: { cardId: string } }
+  | { type: 'DISCARD_CARD'; payload: { cardId: string } };
 
 // ============================================================================
 // Constants

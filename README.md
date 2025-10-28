@@ -7,10 +7,16 @@ A Next.js 16 application for managing card games with deck, hand, and playfield 
 ### Core Gameplay
 - **View Playfield**: Green felt playfield with visible card deck
 - **Draw Cards**: Click deck to draw cards into your hand at the bottom
-- **Play Cards**: Click cards in hand to play them onto the playfield
-- **Session Persistence**: Game state automatically saves to Supabase and survives browser refresh
+- **Drag & Drop Cards**: ⭐ Drag cards from hand to playfield, reposition cards anywhere (pixel-perfect positioning)
+- **Free-Form Positioning**: Place cards anywhere on playfield - no grid snapping
+- **Auto Z-Index Stacking**: Last moved card automatically appears on top
+- **Return to Hand**: Drag playfield cards back to your hand
+- **Discard Cards**: Drag cards outside playfield to permanently remove them
+- **Session Persistence**: Game state (including card positions) automatically saves to Supabase
 
 ### UI/UX
+- **Smooth 60fps Dragging**: GPU-accelerated CSS transforms for buttery-smooth card movement
+- **Visual Feedback**: Cards scale and fade during drag, cursor changes show valid drop zones
 - **Dark Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Smooth Animations**: Card transitions and hover effects
@@ -52,11 +58,18 @@ Open [http://localhost:3001/game](http://localhost:3001/game)
 
 ## 🎮 How to Play
 
-1. Click deck to draw cards into your hand (bottom)
-2. Click cards in hand to play them to playfield
-3. Import custom decks via "Import Deck" button
-4. Toggle theme with sun/moon icon
-5. Reset game with "Reset" button
+1. **Draw Cards**: Click deck to draw cards into your hand (bottom)
+2. **Drag & Drop**: 
+   - Click and drag cards from hand onto the playfield
+   - Position cards anywhere you want (no grid, pixel-perfect)
+   - Drag playfield cards to reposition them
+   - Drag cards back to hand to return them
+   - Drag cards outside playfield to discard them
+3. **Auto Stacking**: Cards you move automatically appear on top of others
+4. **Import Decks**: Upload custom decks via "Import Deck" button
+5. **Toggle Theme**: Use sun/moon icon to switch dark/light mode
+6. **Reset Game**: Clear everything with "Reset" button
+7. **Auto-Save**: Your game state (including card positions) saves automatically
 
 ## 📄 Deck Import Format
 
@@ -90,15 +103,47 @@ Sample deck: `public/sample-deck.json`
 ```
 app/
 ├── components/
-│   ├── game/          # Card, Deck, Hand, Playfield
+│   ├── game/          # Card, Deck, Hand, Playfield, DeckImport, CardPreview
 │   └── ui/            # Button, FileUpload, ThemeToggle
 ├── lib/
-│   ├── hooks/         # useGameState, useSupabase
-│   ├── types/         # TypeScript interfaces
-│   ├── utils/         # deck, session utilities
+│   ├── hooks/         # useGameState, useSupabase, useDragAndDrop
+│   ├── contexts/      # AltKeyContext, CardPreviewContext
+│   ├── types/         # TypeScript interfaces (game, database, deck-import, card-preview)
+│   ├── utils/         # deck, session, parsers, transformers, validators
 │   └── supabase/      # client config
 └── game/page.tsx      # Main game page
+
+specs/                 # Feature specifications
+├── 001-card-sandbox/  # Initial game mechanics
+├── 002-deck-import-formats/  # Deck import system
+├── 003-card-hover-preview/   # ALT-hover card preview
+└── 004-card-drag-drop/       # ⭐ Drag & drop implementation
+    ├── spec.md               # Requirements and user stories
+    ├── plan.md               # Implementation phases
+    ├── tasks.md              # 123 granular tasks
+    ├── research.md           # Technical research & decisions
+    ├── lessons-learned.md    # ⭐ Complete implementation analysis
+    └── IMPLEMENTATION-SUMMARY.md  # Quick reference
 ```
+
+## 📚 Feature Documentation
+
+### Drag & Drop Cards (004-card-drag-drop)
+Comprehensive drag-and-drop system with 60fps performance:
+
+- **spec.md**: Complete feature specification with 6 user stories
+- **lessons-learned.md**: Post-implementation analysis with performance optimizations, bug fixes, and key patterns
+- **IMPLEMENTATION-SUMMARY.md**: Quick reference for developers
+
+**Key Technical Details**:
+- Native mouse events (not HTML5 Drag API)
+- GPU-accelerated CSS transforms
+- RequestAnimationFrame throttling
+- Custom offset calculation for pixel-perfect positioning
+- Auto z-index management
+- 500ms debounced auto-save
+
+**Performance**: 60fps with 50+ cards on playfield
 
 ## Learn More
 

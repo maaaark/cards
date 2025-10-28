@@ -30,6 +30,11 @@ function CardComponent({
   disabled = false,
   className = '',
   location,
+  draggable = false,
+  isDragging = false,
+  position,
+  dragOffset,
+  onDragStart,
 }: CardProps) {
   const [imageError, setImageError] = useState(false);
   const { showPreview, hidePreview } = useCardPreview();
@@ -50,6 +55,10 @@ function CardComponent({
     ? 'cursor-pointer hover:scale-105 hover:shadow-xl active:scale-95'
     : '';
   
+  // Drag styles
+  const dragStyles = draggable ? 'cursor-grab active:cursor-grabbing' : '';
+  const draggingStyles = isDragging ? 'scale-105 shadow-2xl z-[999]' : '';
+  
   // Disabled styles
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
   
@@ -58,7 +67,23 @@ function CardComponent({
     ? 'w-20 sm:w-24 md:w-28'
     : 'w-20 sm:w-24 md:w-28 lg:w-32';
   
-  const cardClasses = `${baseStyles} ${locationStyles[location]} ${interactiveStyles} ${disabledStyles} ${sizeStyles} ${className}`.trim();
+  // Absolute positioning for playfield cards
+  const positionStyles = position
+    ? 'absolute'
+    : '';
+  
+  const cardClasses = `${baseStyles} ${locationStyles[location]} ${interactiveStyles} ${dragStyles} ${draggingStyles} ${disabledStyles} ${sizeStyles} ${positionStyles} ${className}`.trim();
+  
+  // Inline styles for absolute positioning and drag transform
+  const inlineStyles: React.CSSProperties | undefined = position
+    ? {
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        zIndex: isDragging ? 9999 : position.zIndex,
+        transform: dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined,
+        transition: isDragging ? 'none' : undefined, // Disable transition during drag
+      }
+    : undefined;
   
   const handleClick = () => {
     if (isClickable) {
@@ -82,14 +107,25 @@ function CardComponent({
     hidePreview(card.id);
   };
   
+  // Drag handlers
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (draggable && onDragStart && !disabled) {
+      // Prevent text selection during drag
+      event.preventDefault();
+      onDragStart(card, event);
+    }
+  };
+  
   return (
     <>
       <div
         className={cardClasses}
+        style={inlineStyles}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
         role={isClickable ? 'button' : undefined}
         tabIndex={isClickable ? 0 : undefined}
         aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}

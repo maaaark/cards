@@ -3,29 +3,66 @@
  * 
  * Displays player's hand of cards fixed at the bottom of the screen.
  * Uses horizontal scrolling for many cards with responsive design.
+ * Supports drag-and-drop to playfield.
  * 
  * @module components/game/Hand
  */
 
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { Card } from './Card';
-import type { HandProps } from '@/app/lib/types/game';
+import type { HandProps, Card as CardType } from '@/app/lib/types/game';
+import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 
 /**
- * Hand component with fixed bottom positioning.
+ * Hand component with fixed bottom positioning and drag support.
  * 
  * @example
  * <Hand
  *   hand={{ cards: [...] }}
  *   onPlayCard={handlePlayCard}
+ *   onCardDragStart={handleDragStart}
  * />
  */
-export function Hand({ hand, onPlayCard }: HandProps) {
+export function Hand({ hand, onPlayCard, onCardDragStart }: HandProps) {
   const isEmpty = hand.cards.length === 0;
+  const handRef = useRef<HTMLDivElement>(null);
+  const { dragState, setDropZoneConfig } = useDragAndDrop();
+  
+  // Calculate and update hand bounds for drop detection
+  useEffect(() => {
+    if (!handRef.current) return;
+    
+    const updateBounds = () => {
+      if (!handRef.current) return;
+      const rect = handRef.current.getBoundingClientRect();
+      setDropZoneConfig({
+        handBounds: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          right: rect.right,
+          bottom: rect.bottom,
+        },
+      });
+    };
+    
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+    return () => window.removeEventListener('resize', updateBounds);
+  }, [setDropZoneConfig]);
+  
+  const handleCardDragStart = (card: CardType, event: React.MouseEvent) => {
+    if (onCardDragStart) {
+      onCardDragStart(card, event);
+    }
+  };
 
   return (
     <div
+      ref={handRef}
       className="fixed bottom-0 left-0 right-0 bg-zinc-100 dark:bg-zinc-800 border-t-2 border-zinc-300 dark:border-zinc-700 shadow-2xl z-50"
       role="list"
       aria-label="Your hand"
@@ -54,23 +91,32 @@ export function Hand({ hand, onPlayCard }: HandProps) {
           // Cards display
           <div className="p-4 overflow-x-auto">
             <div className="flex gap-3 sm:gap-4 justify-center min-w-min">
-              {hand.cards.map((card, index) => (
-                <div
-                  key={card.id}
-                  role="listitem"
-                  className="flex-shrink-0"
-                  style={{
-                    // Slight stagger animation for visual interest
-                    animation: `slideUp 0.3s ease-out ${index * 0.05}s both`,
-                  }}
-                >
-                  <Card
-                    card={card}
-                    location="hand"
-                    onClick={() => onPlayCard(card.id)}
-                  />
-                </div>
-              ))}
+              {hand.cards.map((card, index) => {
+                const isBeingDragged = dragState.isDragging && dragState.draggedCardId === card.id;
+                return (
+                  <div
+                    key={card.id}
+                    role="listitem"
+                    className="flex-shrink-0"
+                    style={{
+                      // Slight stagger animation for visual interest
+                      animation: `slideUp 0.3s ease-out ${index * 0.05}s both`,
+                      // Hide card when being dragged
+                      opacity: isBeingDragged ? 0.3 : 1,
+                      pointerEvents: isBeingDragged ? 'none' : 'auto',
+                    }}
+                  >
+                    <Card
+                      card={card}
+                      location="hand"
+                      onClick={() => onPlayCard(card.id)}
+                      draggable={true}
+                      isDragging={isBeingDragged}
+                      onDragStart={handleCardDragStart}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

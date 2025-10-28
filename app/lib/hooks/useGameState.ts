@@ -20,6 +20,7 @@ import type {
   DeckMetadata,
   DeckImport,
   UseGameStateReturn,
+  CardPosition,
 } from '../types/game';
 
 /**
@@ -47,7 +48,11 @@ export function useGameState(): UseGameStateReturn {
   // Game state
   const [deck, setDeck] = useState<Deck>({ cards: [], originalCount: 0 });
   const [hand, setHand] = useState<Hand>({ cards: [] });
-  const [playfield, setPlayfield] = useState<Playfield>({ cards: [] });
+  const [playfield, setPlayfield] = useState<Playfield>({ 
+    cards: [], 
+    positions: new Map(),
+    nextZIndex: 1,
+  });
   const [deckMetadata, setDeckMetadata] = useState<DeckMetadata | undefined>(undefined);
   
   // UI state - only for initial load, not for auto-saves
@@ -95,7 +100,7 @@ export function useGameState(): UseGameStateReturn {
           await saveGameState(sessionId, {
             deck: testDeck,
             hand: { cards: [] },
-            playfield: { cards: [] },
+            playfield: { cards: [], positions: new Map(), nextZIndex: 1 },
             deckMetadata: {
               name: 'Test Deck',
               originalCardCount: testCards.length,
@@ -230,7 +235,7 @@ export function useGameState(): UseGameStateReturn {
     
     // Reset hand and playfield
     setHand({ cards: [] });
-    setPlayfield({ cards: [] });
+    setPlayfield({ cards: [], positions: new Map(), nextZIndex: 1 });
     
     setError(undefined);
   }, []);
@@ -248,7 +253,7 @@ export function useGameState(): UseGameStateReturn {
     
     setDeck(testDeck);
     setHand({ cards: [] });
-    setPlayfield({ cards: [] });
+    setPlayfield({ cards: [], positions: new Map(), nextZIndex: 1 });
     setDeckMetadata({
       name: 'Test Deck',
       originalCardCount: testCards.length,
@@ -257,6 +262,104 @@ export function useGameState(): UseGameStateReturn {
     
     setError(undefined);
   }, []);
+
+  /**
+   * Move a card from hand to playfield at specified position
+   */
+  const moveCardToPlayfield = useCallback((cardId: string, position: CardPosition) => {
+    const cardIndex = hand.cards.findIndex(c => c.id === cardId);
+    
+    if (cardIndex === -1) {
+      setError('Card not found in hand');
+      return;
+    }
+    
+    const card = hand.cards[cardIndex];
+    const updatedHandCards = hand.cards.filter(c => c.id !== cardId);
+    
+    setHand({ cards: updatedHandCards });
+    setPlayfield(prev => ({
+      ...prev,
+      cards: [...prev.cards, card],
+      positions: new Map(prev.positions).set(cardId, position),
+      nextZIndex: position.zIndex >= prev.nextZIndex ? position.zIndex + 1 : prev.nextZIndex,
+    }));
+    
+    setError(undefined);
+  }, [hand.cards]);
+
+  /**
+   * Update position of a card already on the playfield
+   */
+  const updateCardPosition = useCallback((cardId: string, position: CardPosition) => {
+    const cardExists = playfield.cards.some(c => c.id === cardId);
+    
+    if (!cardExists) {
+      setError('Card not found on playfield');
+      return;
+    }
+    
+    setPlayfield(prev => ({
+      ...prev,
+      positions: new Map(prev.positions).set(cardId, position),
+      nextZIndex: position.zIndex >= prev.nextZIndex ? position.zIndex + 1 : prev.nextZIndex,
+    }));
+    
+    setError(undefined);
+  }, [playfield.cards]);
+
+  /**
+   * Move a card from playfield back to hand
+   */
+  const moveCardToHand = useCallback((cardId: string) => {
+    const card = playfield.cards.find(c => c.id === cardId);
+    
+    if (!card) {
+      setError('Card not found on playfield');
+      return;
+    }
+    
+    const updatedPlayfieldCards = playfield.cards.filter(c => c.id !== cardId);
+    const updatedPositions = new Map(playfield.positions);
+    updatedPositions.delete(cardId);
+    
+    setPlayfield({
+      ...playfield,
+      cards: updatedPlayfieldCards,
+      positions: updatedPositions,
+    });
+    
+    setHand(prev => ({
+      ...prev,
+      cards: [...prev.cards, card],
+    }));
+    
+    setError(undefined);
+  }, [playfield]);
+
+  /**
+   * Discard a card from playfield (remove from game)
+   */
+  const discardCard = useCallback((cardId: string) => {
+    const cardExists = playfield.cards.some(c => c.id === cardId);
+    
+    if (!cardExists) {
+      setError('Card not found on playfield');
+      return;
+    }
+    
+    const updatedPlayfieldCards = playfield.cards.filter(c => c.id !== cardId);
+    const updatedPositions = new Map(playfield.positions);
+    updatedPositions.delete(cardId);
+    
+    setPlayfield({
+      ...playfield,
+      cards: updatedPlayfieldCards,
+      positions: updatedPositions,
+    });
+    
+    setError(undefined);
+  }, [playfield]);
 
   return {
     deck,
@@ -269,5 +372,9 @@ export function useGameState(): UseGameStateReturn {
     playCard,
     importDeck,
     resetGame,
+    moveCardToPlayfield,
+    updateCardPosition,
+    moveCardToHand,
+    discardCard,
   };
 }
