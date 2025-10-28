@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useGameState } from '@/app/lib/hooks/useGameState';
 import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 import { Playfield } from '@/app/components/game/Playfield';
@@ -44,31 +44,73 @@ function GamePageInner() {
 
   const { previewState, previewPosition, previewDimensions } = useCardPreview();
   const { startDrag } = useDragAndDrop();
+  
+  const playfieldRef = useRef<HTMLDivElement>(null);
 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   
-  // Handle card drag start from hand or playfield
-  const handleCardDragStart = (card: Card, event: React.MouseEvent) => {
-    // Determine source based on where the card is
+  // Unified handler for all card drag starts (hand or playfield)
+  const handleCardDragStart = useCallback((card: Card, event: React.MouseEvent) => {
+    // Determine if card is on playfield or in hand
     const isOnPlayfield = playfield.cards.some(c => c.id === card.id);
     const source = isOnPlayfield ? 'playfield' : 'hand';
     
-    // Get original position if on playfield
-    const originalPosition = isOnPlayfield
-      ? playfield.positions.get(card.id)
+    // Get current position if on playfield
+    const currentPosition = playfield.positions.get(card.id);
+    
+    const originalPosition = currentPosition
+      ? { ...currentPosition, cardId: card.id }
       : undefined;
     
-    const originalPositionWithCardId = originalPosition
-      ? { ...originalPosition, cardId: card.id }
-      : undefined;
+    // Calculate offset for drag
+    let customOffset: { x: number; y: number } | undefined;
     
+    if (isOnPlayfield && currentPosition && playfieldRef.current) {
+      // For playfield cards: calculate offset relative to playfield coordinates
+      const playfieldRect = playfieldRef.current.getBoundingClientRect();
+      const mouseX = event.clientX - playfieldRect.left;
+      const mouseY = event.clientY - playfieldRect.top;
+      customOffset = {
+        x: mouseX - currentPosition.x,
+        y: mouseY - currentPosition.y,
+      };
+    }
+    
+    // For cards from hand: immediately place on playfield at cursor position
+    if (!isOnPlayfield && playfieldRef.current) {
+      const playfieldRect = playfieldRef.current.getBoundingClientRect();
+      const cardElement = event.currentTarget as HTMLElement;
+      const cardRect = cardElement.getBoundingClientRect();
+      
+      // Calculate offset (where on the card user clicked)
+      const offsetX = event.clientX - cardRect.left;
+      const offsetY = event.clientY - cardRect.top;
+      
+      // Calculate position in playfield coordinates (accounting for offset)
+      const x = event.clientX - playfieldRect.left - offsetX;
+      const y = event.clientY - playfieldRect.top - offsetY;
+      
+      // Immediately move card to playfield
+      moveCardToPlayfield(card.id, {
+        cardId: card.id,
+        x,
+        y,
+        zIndex: playfield.nextZIndex,
+      });
+      
+      // Set custom offset for consistent dragging
+      customOffset = { x: offsetX, y: offsetY };
+    }
+    
+    // Start drag state
     startDrag({
       card,
       source,
       event,
-      originalPosition: originalPositionWithCardId,
+      originalPosition,
+      customOffset,
     });
-  };
+  }, [playfield, moveCardToPlayfield, startDrag]);
 
   const handleImport = (deckImport: { name: string; cards: Array<{ id: string; name: string; imageUrl?: string; metadata?: Record<string, unknown> }> }) => {
     importDeck(deckImport);
@@ -188,6 +230,8 @@ function GamePageInner() {
         onUpdateCardPosition={updateCardPosition}
         onMoveCardToHand={moveCardToHand}
         onDiscardCard={discardCard}
+        onCardDragStart={handleCardDragStart}
+        playfieldRef={playfieldRef}
       />
       
       {/* Hand - fixed at bottom */}

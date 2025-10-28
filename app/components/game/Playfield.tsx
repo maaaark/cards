@@ -12,7 +12,7 @@
 import { useRef, useEffect } from 'react';
 import { Deck } from './Deck';
 import { Card } from './Card';
-import type { PlayfieldProps, Card as CardType } from '@/app/lib/types/game';
+import type { PlayfieldProps } from '@/app/lib/types/game';
 import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 import type { PlayfieldBounds } from '@/app/lib/hooks/useDragAndDrop';
 
@@ -34,13 +34,15 @@ export function Playfield({
   playfield, 
   deck, 
   onDrawCard,
-  onMoveCardToPlayfield,
   onUpdateCardPosition,
   onMoveCardToHand,
   onDiscardCard,
+  onCardDragStart,
+  playfieldRef: externalPlayfieldRef,
 }: PlayfieldProps) {
-  const playfieldRef = useRef<HTMLDivElement>(null);
-  const { dragState, startDrag, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
+  const internalPlayfieldRef = useRef<HTMLDivElement>(null);
+  const playfieldRef = externalPlayfieldRef || internalPlayfieldRef;
+  const { dragState, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
   const playfieldBoundsRef = useRef<PlayfieldBounds | null>(null);
   
   // Calculate and update playfield bounds for drop detection
@@ -68,68 +70,9 @@ export function Playfield({
     updateBounds();
     window.addEventListener('resize', updateBounds);
     return () => window.removeEventListener('resize', updateBounds);
+    // playfieldRef is stable and doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setDropZoneConfig]);
-  
-  const handleCardDragStart = (card: CardType, event: React.MouseEvent) => {
-    // Get card's current position if on playfield
-    const currentPosition = playfield.positions.get(card.id);
-    
-    // Determine source: check if card is in hand or on playfield
-    const isOnPlayfield = playfield.cards.some(c => c.id === card.id);
-    const source = isOnPlayfield ? 'playfield' : 'hand';
-    
-    const originalPosition = currentPosition
-      ? { ...currentPosition, cardId: card.id }
-      : undefined;
-    
-    // For cards on playfield, calculate offset relative to playfield coordinates
-    let customOffset: { x: number; y: number } | undefined;
-    if (isOnPlayfield && currentPosition && playfieldRef.current) {
-      const playfieldRect = playfieldRef.current.getBoundingClientRect();
-      // Mouse position relative to playfield
-      const mouseX = event.clientX - playfieldRect.left;
-      const mouseY = event.clientY - playfieldRect.top;
-      // Offset from card's playfield position to mouse
-      customOffset = {
-        x: mouseX - currentPosition.x,
-        y: mouseY - currentPosition.y,
-      };
-    }
-    
-    // If card is from hand, immediately place it on playfield at cursor position
-    if (!isOnPlayfield && playfieldRef.current && onMoveCardToPlayfield) {
-      const playfieldRect = playfieldRef.current.getBoundingClientRect();
-      const cardElement = event.currentTarget as HTMLElement;
-      const cardRect = cardElement.getBoundingClientRect();
-      
-      // Calculate offset (where on the card user clicked)
-      const offsetX = event.clientX - cardRect.left;
-      const offsetY = event.clientY - cardRect.top;
-      
-      // Calculate position in playfield coordinates (accounting for offset)
-      const x = event.clientX - playfieldRect.left - offsetX;
-      const y = event.clientY - playfieldRect.top - offsetY;
-      
-      // Immediately move card to playfield
-      onMoveCardToPlayfield(card.id, {
-        cardId: card.id,
-        x,
-        y,
-        zIndex: playfield.nextZIndex,
-      });
-      
-      // Set custom offset for consistent dragging
-      customOffset = { x: offsetX, y: offsetY };
-    }
-    
-    startDrag({
-      card,
-      source,
-      event,
-      originalPosition,
-      customOffset,
-    });
-  };
   
   const handleMouseUp = (event: React.MouseEvent) => {
     if (!dragState.isDragging || !dragState.draggedCardId) return;
@@ -224,7 +167,7 @@ export function Playfield({
                     isDragging={isDraggingThisCard}
                     position={position}
                     dragOffset={dragOffset}
-                    onDragStart={handleCardDragStart}
+                    onDragStart={onCardDragStart}
                   />
                 );
               })}

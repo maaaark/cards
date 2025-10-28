@@ -317,6 +317,12 @@ export interface PlayfieldProps {
   
   /** Handler for discarding a card from playfield */
   onDiscardCard?: (cardId: string) => void;
+  
+  /** Handler for card drag start (unified for hand and playfield) */
+  onCardDragStart?: (card: Card, event: React.MouseEvent) => void;
+  
+  /** Ref to the playfield element */
+  playfieldRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 /**
