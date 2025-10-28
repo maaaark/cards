@@ -32,7 +32,6 @@ function GamePageInner() {
     hand,
     playfield,
     drawCard,
-    playCard,
     importDeck,
     resetGame,
     isLoading,
@@ -193,8 +192,7 @@ function GamePageInner() {
       
       {/* Hand - fixed at bottom */}
       <Hand 
-        hand={hand} 
-        onPlayCard={playCard}
+        hand={hand}
         onCardDragStart={handleCardDragStart}
       />
 

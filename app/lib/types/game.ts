@@ -289,9 +289,6 @@ export interface HandProps {
   /** Current hand state */
   hand: Hand;
   
-  /** Handler for playing a card */
-  onPlayCard: (cardId: string) => void;
-  
   /** Handler for starting a card drag operation */
   onCardDragStart?: (card: Card, event: React.MouseEvent) => void;
 }

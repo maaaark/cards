@@ -25,7 +25,7 @@ import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
  *   onCardDragStart={handleDragStart}
  * />
  */
-export function Hand({ hand, onPlayCard, onCardDragStart }: HandProps) {
+export function Hand({ hand, onCardDragStart }: HandProps) {
   const isEmpty = hand.cards.length === 0;
   const handRef = useRef<HTMLDivElement>(null);
   const { dragState, setDropZoneConfig } = useDragAndDrop();
@@ -109,7 +109,6 @@ export function Hand({ hand, onPlayCard, onCardDragStart }: HandProps) {
                     <Card
                       card={card}
                       location="hand"
-                      onClick={() => onPlayCard(card.id)}
                       draggable={true}
                       isDragging={isBeingDragged}
                       onDragStart={handleCardDragStart}
