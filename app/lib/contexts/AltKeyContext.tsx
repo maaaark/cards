@@ -1,8 +1,8 @@
 /**
  * AltKeyContext
  * 
- * Global React Context for tracking CTRL key state.
- * Provides centralized CTRL key press detection for the entire application.
+ * Global React Context for tracking ALT key state.
+ * Provides centralized ALT key press detection for the entire application.
  * 
  * @module contexts/AltKeyContext
  */
@@ -33,7 +33,7 @@ interface AltKeyProviderProps {
 /**
  * AltKeyProvider Component
  * 
- * Manages global CTRL key state using two keyboard event listeners.
+ * Manages global ALT key state using two keyboard event listeners.
  * Attaches listeners on mount, detaches on unmount.
  * 
  * Performance: Uses exactly 2 event listeners (keydown, keyup).
@@ -51,11 +51,11 @@ export function AltKeyProvider({ children }: AltKeyProviderProps) {
   useEffect(() => {
     /**
      * Handle keydown event.
-     * Sets isAltPressed to true when CTRL is pressed.
+     * Sets isAltPressed to true when ALT is pressed.
      * Prevents default browser menu behavior.
      */
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
+      if (event.key === 'Alt') {
         event.preventDefault();
         setIsAltPressed(true);
       }
@@ -63,11 +63,11 @@ export function AltKeyProvider({ children }: AltKeyProviderProps) {
 
     /**
      * Handle keyup event.
-     * Sets isAltPressed to false when CTRL is released.
+     * Sets isAltPressed to false when ALT is released.
      * Prevents default browser menu behavior.
      */
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
+      if (event.key === 'Alt') {
         event.preventDefault();
         setIsAltPressed(false);
       }
@@ -75,7 +75,7 @@ export function AltKeyProvider({ children }: AltKeyProviderProps) {
 
     /**
      * Handle window blur event.
-     * Resets CTRL state when window loses focus to prevent stuck CTRL key.
+     * Resets ALT state when window loses focus to prevent stuck ALT key.
      */
     const handleBlur = () => {
       setIsAltPressed(false);

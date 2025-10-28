@@ -2,7 +2,7 @@
  * Card Component
  * 
  * Displays a single playing card with proper aspect ratio and styling.
- * Supports dark mode, hover states, accessibility, and CTRL+hover preview.
+ * Supports dark mode, hover states, accessibility, and ALT+hover preview.
  * 
  * @module components/game/Card
  */

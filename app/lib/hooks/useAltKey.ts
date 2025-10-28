@@ -1,7 +1,7 @@
 /**
  * useAltKey Hook
  * 
- * Custom hook that provides access to global CTRL key state.
+ * Custom hook that provides access to global ALT key state.
  * Must be used within an AltKeyProvider.
  * 
  * @module hooks/useAltKey
@@ -14,9 +14,9 @@ import { AltKeyContext } from '../contexts/AltKeyContext';
 import type { UseAltKeyReturn } from '../types/card-preview';
 
 /**
- * Hook to access CTRL key state.
+ * Hook to access ALT key state.
  * 
- * @returns Object containing CTRL key state
+ * @returns Object containing ALT key state
  * @throws Error if used outside AltKeyProvider
  * 
  * @example
@@ -26,7 +26,7 @@ import type { UseAltKeyReturn } from '../types/card-preview';
  *   
  *   return (
  *     <div>
- *       {isAltPressed ? 'CTRL is pressed' : 'CTRL is not pressed'}
+ *       {isAltPressed ? 'ALT is pressed' : 'ALT is not pressed'}
  *     </div>
  *   );
  * }

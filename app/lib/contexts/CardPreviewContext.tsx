@@ -40,7 +40,7 @@ interface CardPreviewProviderProps {
  * CardPreviewProvider Component
  * 
  * Manages card preview state and mouse tracking.
- * Automatically hides preview when CTRL key is released.
+ * Automatically hides preview when ALT key is released.
  * Uses requestAnimationFrame for smooth 60fps position updates.
  * 
  * Performance: Conditionally attaches mousemove listener only when preview is active.
@@ -104,9 +104,9 @@ export function CardPreviewProvider({ children }: CardPreviewProviderProps) {
   }, []);
 
   /**
-   * Derived state: preview is only active if CTRL is pressed AND a card is hovered.
-   * This automatically shows preview when CTRL is pressed while hovering,
-   * and hides it when CTRL is released.
+   * Derived state: preview is only active if ALT is pressed AND a card is hovered.
+   * This automatically shows preview when ALT is pressed while hovering,
+   * and hides it when ALT is released.
    */
   const effectivePreviewState: PreviewState = {
     ...previewState,
