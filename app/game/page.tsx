@@ -74,35 +74,17 @@ function GamePageInner() {
         x: mouseX - currentPosition.x,
         y: mouseY - currentPosition.y,
       };
-    }
-    
-    // For cards from hand: immediately place on playfield at cursor position
-    if (!isOnPlayfield && playfieldRef.current) {
-      const playfieldRect = playfieldRef.current.getBoundingClientRect();
+    } else if (!isOnPlayfield) {
+      // For hand cards: calculate offset from card element
       const cardElement = event.currentTarget as HTMLElement;
       const cardRect = cardElement.getBoundingClientRect();
-      
-      // Calculate offset (where on the card user clicked)
-      const offsetX = event.clientX - cardRect.left;
-      const offsetY = event.clientY - cardRect.top;
-      
-      // Calculate position in playfield coordinates (accounting for offset)
-      const x = event.clientX - playfieldRect.left - offsetX;
-      const y = event.clientY - playfieldRect.top - offsetY;
-      
-      // Immediately move card to playfield
-      moveCardToPlayfield(card.id, {
-        cardId: card.id,
-        x,
-        y,
-        zIndex: playfield.nextZIndex,
-      });
-      
-      // Set custom offset for consistent dragging
-      customOffset = { x: offsetX, y: offsetY };
+      customOffset = {
+        x: event.clientX - cardRect.left,
+        y: event.clientY - cardRect.top,
+      };
     }
     
-    // Start drag state
+    // Start drag state (don't move card yet - wait for mouseup)
     startDrag({
       card,
       source,
@@ -110,7 +92,7 @@ function GamePageInner() {
       originalPosition,
       customOffset,
     });
-  }, [playfield, moveCardToPlayfield, startDrag]);
+  }, [playfield, startDrag]);
 
   const handleImport = (deckImport: { name: string; cards: Array<{ id: string; name: string; imageUrl?: string; metadata?: Record<string, unknown> }> }) => {
     importDeck(deckImport);

@@ -32,6 +32,7 @@ export interface CardPosition extends Position2D {
 export interface DragState {
   isDragging: boolean;
   draggedCardId: string | null;
+  draggedCard: Card | null;
   draggedCardSource: CardDragSource | null;
   startPosition: Position2D | null;
   currentPosition: Position2D | null;
@@ -78,6 +79,7 @@ export function useDragAndDrop() {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     draggedCardId: null,
+    draggedCard: null,
     draggedCardSource: null,
     startPosition: null,
     currentPosition: null,
@@ -157,6 +159,7 @@ export function useDragAndDrop() {
     setDragState({
       isDragging: true,
       draggedCardId: card.id,
+      draggedCard: card,
       draggedCardSource: source,
       startPosition: { x: mouseEvent.clientX, y: mouseEvent.clientY },
       currentPosition: { x: mouseEvent.clientX, y: mouseEvent.clientY },
@@ -191,6 +194,7 @@ export function useDragAndDrop() {
       setDragState({
         isDragging: false,
         draggedCardId: null,
+        draggedCard: null,
         draggedCardSource: null,
         startPosition: null,
         currentPosition: null,
@@ -214,6 +218,7 @@ export function useDragAndDrop() {
     setDragState({
       isDragging: false,
       draggedCardId: null,
+      draggedCard: null,
       draggedCardSource: null,
       startPosition: null,
       currentPosition: null,

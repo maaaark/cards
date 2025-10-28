@@ -34,6 +34,7 @@ export function Playfield({
   playfield, 
   deck, 
   onDrawCard,
+  onMoveCardToPlayfield,
   onUpdateCardPosition,
   onMoveCardToHand,
   onDiscardCard,
@@ -82,17 +83,25 @@ export function Playfield({
     
     // Check if card is on playfield
     const isOnPlayfield = playfield.cards.some(c => c.id === dragState.draggedCardId);
+    const wasFromHand = dragState.draggedCardSource === 'hand';
     
     // Handle drop based on zone
-    if (dropZone === 'playfield' && playfieldElement && isOnPlayfield) {
-      // Card is already on playfield (either was there, or we moved it on mousedown)
-      // Update position if it was repositioned
+    if (dropZone === 'playfield' && playfieldElement) {
       const rect = playfieldElement.getBoundingClientRect();
       // Account for the offset (where on the card the user clicked)
       const x = event.clientX - rect.left - dragState.offset.x;
       const y = event.clientY - rect.top - dragState.offset.y;
       
-      if (onUpdateCardPosition) {
+      if (wasFromHand && onMoveCardToPlayfield) {
+        // Move from hand to playfield
+        onMoveCardToPlayfield(dragState.draggedCardId, {
+          cardId: dragState.draggedCardId,
+          x,
+          y,
+          zIndex: playfield.nextZIndex,
+        });
+      } else if (isOnPlayfield && onUpdateCardPosition) {
+        // Update position of card already on playfield
         onUpdateCardPosition(dragState.draggedCardId, {
           cardId: dragState.draggedCardId,
           x,
@@ -101,12 +110,12 @@ export function Playfield({
         });
       }
     } else if (dropZone === 'hand' && onMoveCardToHand) {
-      // Move from playfield to hand
+      // Move from playfield to hand (only if card was on playfield)
       if (isOnPlayfield) {
         onMoveCardToHand(dragState.draggedCardId);
       }
     } else if (dropZone === 'discard' && onDiscardCard) {
-      // Discard card permanently
+      // Discard card permanently (only if card was on playfield)
       if (isOnPlayfield) {
         onDiscardCard(dragState.draggedCardId);
       }
@@ -134,6 +143,31 @@ export function Playfield({
         
         {/* Played cards with absolute positioning */}
         <div className="mt-8 relative min-h-[400px]">
+          {/* Ghost card for hand cards being dragged */}
+          {dragState.isDragging && dragState.draggedCardSource === 'hand' && dragState.currentPosition && playfieldRef.current && dragState.draggedCard && (
+            (() => {
+              const rect = playfieldRef.current!.getBoundingClientRect();
+              const x = dragState.currentPosition.x - rect.left - dragState.offset.x;
+              const y = dragState.currentPosition.y - rect.top - dragState.offset.y;
+              
+              return (
+                <Card
+                  key={`ghost-${dragState.draggedCardId}`}
+                  card={dragState.draggedCard}
+                  location="playfield"
+                  draggable={false}
+                  isDragging={true}
+                  position={{
+                    cardId: dragState.draggedCardId!,
+                    x,
+                    y,
+                    zIndex: 9999,
+                  }}
+                />
+              );
+            })()
+          )}
+          
           {playfield.cards.length > 0 ? (
             <>
               {playfield.cards.map((card) => {
