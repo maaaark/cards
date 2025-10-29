@@ -43,7 +43,7 @@ function GamePageInner() {
   } = useGameState();
 
   const { previewState, previewPosition, previewDimensions } = useCardPreview();
-  const { startDrag } = useDragAndDrop();
+  const { startDrag, dragState, endDrag, getDropZone } = useDragAndDrop();
   
   const playfieldRef = useRef<HTMLDivElement>(null);
 
@@ -51,9 +51,13 @@ function GamePageInner() {
   
   // Unified handler for all card drag starts (hand or playfield)
   const handleCardDragStart = useCallback((card: Card, event: React.MouseEvent) => {
+    console.log('🎯 handleCardDragStart called', { cardId: card.id, cardName: card.name });
+    
     // Determine if card is on playfield or in hand
     const isOnPlayfield = playfield.cards.some(c => c.id === card.id);
     const source = isOnPlayfield ? 'playfield' : 'hand';
+    
+    console.log('📍 Card source:', source, { isOnPlayfield, playfieldCards: playfield.cards.length });
     
     // Get current position if on playfield
     const currentPosition = playfield.positions.get(card.id);
@@ -82,7 +86,10 @@ function GamePageInner() {
         x: event.clientX - cardRect.left,
         y: event.clientY - cardRect.top,
       };
+      console.log('✋ Hand card offset calculated:', customOffset);
     }
+    
+    console.log('🚀 Starting drag with:', { source, customOffset });
     
     // Start drag state (don't move card yet - wait for mouseup)
     startDrag({
@@ -214,6 +221,9 @@ function GamePageInner() {
         onDiscardCard={discardCard}
         onCardDragStart={handleCardDragStart}
         playfieldRef={playfieldRef}
+        dragState={dragState}
+        endDrag={endDrag}
+        getDropZone={getDropZone}
       />
       
       {/* Hand - fixed at bottom */}

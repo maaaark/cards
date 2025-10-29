@@ -323,6 +323,15 @@ export interface PlayfieldProps {
   
   /** Ref to the playfield element */
   playfieldRef?: React.RefObject<HTMLDivElement | null>;
+  
+  /** Drag state from useDragAndDrop hook */
+  dragState?: import('@/app/lib/hooks/useDragAndDrop').DragState;
+  
+  /** Function to end drag from useDragAndDrop hook */
+  endDrag?: (event: MouseEvent) => void;
+  
+  /** Function to get drop zone from useDragAndDrop hook */
+  getDropZone?: (position: { x: number; y: number }) => import('@/app/lib/hooks/useDragAndDrop').DropZone;
 }
 
 /**

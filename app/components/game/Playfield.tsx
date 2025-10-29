@@ -40,10 +40,20 @@ export function Playfield({
   onDiscardCard,
   onCardDragStart,
   playfieldRef: externalPlayfieldRef,
+  dragState: externalDragState,
+  endDrag: externalEndDrag,
+  getDropZone: externalGetDropZone,
 }: PlayfieldProps) {
   const internalPlayfieldRef = useRef<HTMLDivElement>(null);
   const playfieldRef = externalPlayfieldRef || internalPlayfieldRef;
-  const { dragState, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
+  
+  // Use external drag state if provided, otherwise use internal
+  const internalDragAndDrop = useDragAndDrop();
+  const dragState = externalDragState || internalDragAndDrop.dragState;
+  const endDrag = externalEndDrag || internalDragAndDrop.endDrag;
+  const getDropZone = externalGetDropZone || internalDragAndDrop.getDropZone;
+  const setDropZoneConfig = internalDragAndDrop.setDropZoneConfig;
+  
   const playfieldBoundsRef = useRef<PlayfieldBounds | null>(null);
   
   // Calculate and update playfield bounds for drop detection
@@ -144,29 +154,48 @@ export function Playfield({
         {/* Played cards with absolute positioning */}
         <div className="mt-8 relative min-h-[400px]">
           {/* Ghost card for hand cards being dragged */}
-          {dragState.isDragging && dragState.draggedCardSource === 'hand' && dragState.currentPosition && playfieldRef.current && dragState.draggedCard && (
-            (() => {
-              const rect = playfieldRef.current!.getBoundingClientRect();
-              const x = dragState.currentPosition.x - rect.left - dragState.offset.x;
-              const y = dragState.currentPosition.y - rect.top - dragState.offset.y;
-              
-              return (
-                <Card
-                  key={`ghost-${dragState.draggedCardId}`}
-                  card={dragState.draggedCard}
-                  location="playfield"
-                  draggable={false}
-                  isDragging={true}
-                  position={{
-                    cardId: dragState.draggedCardId!,
-                    x,
-                    y,
-                    zIndex: 9999,
-                  }}
-                />
-              );
-            })()
-          )}
+          {(() => {
+            const showGhost = dragState.isDragging && 
+                             dragState.draggedCardSource === 'hand' && 
+                             dragState.currentPosition && 
+                             playfieldRef.current && 
+                             dragState.draggedCard;
+            
+            if (dragState.isDragging) {
+              console.log('👻 Ghost card check:', {
+                isDragging: dragState.isDragging,
+                source: dragState.draggedCardSource,
+                hasCurrentPos: !!dragState.currentPosition,
+                hasPlayfieldRef: !!playfieldRef.current,
+                hasCard: !!dragState.draggedCard,
+                showGhost
+              });
+            }
+            
+            if (!showGhost || !dragState.currentPosition || !dragState.draggedCard || !playfieldRef.current) return null;
+            
+            const rect = playfieldRef.current.getBoundingClientRect();
+            const x = dragState.currentPosition.x - rect.left - dragState.offset.x;
+            const y = dragState.currentPosition.y - rect.top - dragState.offset.y;
+            
+            console.log('✨ Rendering ghost card at:', { x, y });
+            
+            return (
+              <Card
+                key={`ghost-${dragState.draggedCardId}`}
+                card={dragState.draggedCard}
+                location="playfield"
+                draggable={false}
+                isDragging={true}
+                position={{
+                  cardId: dragState.draggedCardId!,
+                  x,
+                  y,
+                  zIndex: 9999,
+                }}
+              />
+            );
+          })()}
           
           {playfield.cards.length > 0 ? (
             <>
