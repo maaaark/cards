@@ -43,7 +43,7 @@ function GamePageInner() {
   } = useGameState();
 
   const { previewState, previewPosition, previewDimensions } = useCardPreview();
-  const { startDrag, dragState, endDrag, getDropZone } = useDragAndDrop();
+  const { startDrag, dragState, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
   
   const playfieldRef = useRef<HTMLDivElement>(null);
 
@@ -51,13 +51,9 @@ function GamePageInner() {
   
   // Unified handler for all card drag starts (hand or playfield)
   const handleCardDragStart = useCallback((card: Card, event: React.MouseEvent) => {
-    console.log('🎯 handleCardDragStart called', { cardId: card.id, cardName: card.name });
-    
     // Determine if card is on playfield or in hand
     const isOnPlayfield = playfield.cards.some(c => c.id === card.id);
     const source = isOnPlayfield ? 'playfield' : 'hand';
-    
-    console.log('📍 Card source:', source, { isOnPlayfield, playfieldCards: playfield.cards.length });
     
     // Get current position if on playfield
     const currentPosition = playfield.positions.get(card.id);
@@ -79,17 +75,14 @@ function GamePageInner() {
         y: mouseY - currentPosition.y,
       };
     } else if (!isOnPlayfield) {
-      // For hand cards: calculate offset from card element
+      // For hand cards: calculate where user clicked within the card element
       const cardElement = event.currentTarget as HTMLElement;
       const cardRect = cardElement.getBoundingClientRect();
       customOffset = {
         x: event.clientX - cardRect.left,
         y: event.clientY - cardRect.top,
       };
-      console.log('✋ Hand card offset calculated:', customOffset);
     }
-    
-    console.log('🚀 Starting drag with:', { source, customOffset });
     
     // Start drag state (don't move card yet - wait for mouseup)
     startDrag({
@@ -224,6 +217,7 @@ function GamePageInner() {
         dragState={dragState}
         endDrag={endDrag}
         getDropZone={getDropZone}
+        setDropZoneConfig={setDropZoneConfig}
       />
       
       {/* Hand - fixed at bottom */}

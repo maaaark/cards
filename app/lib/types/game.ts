@@ -332,6 +332,9 @@ export interface PlayfieldProps {
   
   /** Function to get drop zone from useDragAndDrop hook */
   getDropZone?: (position: { x: number; y: number }) => import('@/app/lib/hooks/useDragAndDrop').DropZone;
+  
+  /** Function to set drop zone config from useDragAndDrop hook */
+  setDropZoneConfig?: (config: Partial<import('@/app/lib/hooks/useDragAndDrop').DropZoneConfig>) => void;
 }
 
 /**

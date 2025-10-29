@@ -43,6 +43,7 @@ export function Playfield({
   dragState: externalDragState,
   endDrag: externalEndDrag,
   getDropZone: externalGetDropZone,
+  setDropZoneConfig: externalSetDropZoneConfig,
 }: PlayfieldProps) {
   const internalPlayfieldRef = useRef<HTMLDivElement>(null);
   const playfieldRef = externalPlayfieldRef || internalPlayfieldRef;
@@ -52,7 +53,7 @@ export function Playfield({
   const dragState = externalDragState || internalDragAndDrop.dragState;
   const endDrag = externalEndDrag || internalDragAndDrop.endDrag;
   const getDropZone = externalGetDropZone || internalDragAndDrop.getDropZone;
-  const setDropZoneConfig = internalDragAndDrop.setDropZoneConfig;
+  const setDropZoneConfig = externalSetDropZoneConfig || internalDragAndDrop.setDropZoneConfig;
   
   const playfieldBoundsRef = useRef<PlayfieldBounds | null>(null);
   
@@ -86,7 +87,9 @@ export function Playfield({
   }, [setDropZoneConfig]);
   
   const handleMouseUp = (event: React.MouseEvent) => {
-    if (!dragState.isDragging || !dragState.draggedCardId) return;
+    if (!dragState.isDragging || !dragState.draggedCardId) {
+      return;
+    }
     
     const dropZone = getDropZone({ x: event.clientX, y: event.clientY });
     const playfieldElement = playfieldRef.current;
@@ -98,12 +101,23 @@ export function Playfield({
     // Handle drop based on zone
     if (dropZone === 'playfield' && playfieldElement) {
       const rect = playfieldElement.getBoundingClientRect();
+      
       // Account for the offset (where on the card the user clicked)
       const x = event.clientX - rect.left - dragState.offset.x;
       const y = event.clientY - rect.top - dragState.offset.y;
       
+      // Find card for logging
+      const card = playfield.cards.find((c: { id: string }) => c.id === dragState.draggedCardId);
+      
       if (wasFromHand && onMoveCardToPlayfield) {
         // Move from hand to playfield
+        console.log('🎴 Card placed:', {
+          name: card?.name || dragState.draggedCardId.substring(0, 8),
+          position: { x: Math.round(x), y: Math.round(y) },
+          zIndex: playfield.nextZIndex,
+          totalCardsOnPlayfield: playfield.cards.length + 1
+        });
+        
         onMoveCardToPlayfield(dragState.draggedCardId, {
           cardId: dragState.draggedCardId,
           x,
@@ -112,6 +126,13 @@ export function Playfield({
         });
       } else if (isOnPlayfield && onUpdateCardPosition) {
         // Update position of card already on playfield
+        console.log('🎴 Card moved:', {
+          name: card?.name || dragState.draggedCardId.substring(0, 8),
+          position: { x: Math.round(x), y: Math.round(y) },
+          zIndex: playfield.nextZIndex,
+          totalCardsOnPlayfield: playfield.cards.length
+        });
+        
         onUpdateCardPosition(dragState.draggedCardId, {
           cardId: dragState.draggedCardId,
           x,
@@ -139,20 +160,20 @@ export function Playfield({
     <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-40">
       {/* Main playfield container - extra bottom padding for Hand */}
       <div 
-        ref={playfieldRef}
-        className="bg-gradient-to-br from-green-800 to-green-900 dark:from-green-950 dark:to-green-900 rounded-2xl shadow-2xl p-6 sm:p-8 min-h-[calc(100vh-16rem)] relative transition-all duration-200"
+        className="bg-gradient-to-br from-green-800 to-green-900 dark:from-green-950 dark:to-green-900 rounded-2xl shadow-2xl relative"
+        style={{ width: 'fit-content', padding: '2rem' }}
         onMouseUp={handleMouseUp}
       >
         
         {/* Deck area - positioned at top left */}
-        <div className="mb-8">
+        <div style={{ marginBottom: '2rem' }}>
           <div className="inline-block">
             <Deck deck={deck} onDrawCard={onDrawCard} />
           </div>
         </div>
         
-        {/* Played cards with absolute positioning */}
-        <div className="mt-8 relative min-h-[400px]">
+        {/* Played cards with absolute positioning - fixed dimensions */}
+        <div ref={playfieldRef} className="relative border border-white/20" style={{ width: '1200px', height: '500px', overflow: 'hidden' }}>
           {/* Ghost card for hand cards being dragged */}
           {(() => {
             const showGhost = dragState.isDragging && 
@@ -161,24 +182,11 @@ export function Playfield({
                              playfieldRef.current && 
                              dragState.draggedCard;
             
-            if (dragState.isDragging) {
-              console.log('👻 Ghost card check:', {
-                isDragging: dragState.isDragging,
-                source: dragState.draggedCardSource,
-                hasCurrentPos: !!dragState.currentPosition,
-                hasPlayfieldRef: !!playfieldRef.current,
-                hasCard: !!dragState.draggedCard,
-                showGhost
-              });
-            }
-            
             if (!showGhost || !dragState.currentPosition || !dragState.draggedCard || !playfieldRef.current) return null;
             
             const rect = playfieldRef.current.getBoundingClientRect();
             const x = dragState.currentPosition.x - rect.left - dragState.offset.x;
             const y = dragState.currentPosition.y - rect.top - dragState.offset.y;
-            
-            console.log('✨ Rendering ghost card at:', { x, y });
             
             return (
               <Card

@@ -40,7 +40,21 @@ function CardComponent({
   const { showPreview, hidePreview } = useCardPreview();
   const isClickable = onClick && !disabled;
   
-  // Base styles with aspect ratio - borderless
+  // Outer wrapper styles (for absolute positioning on playfield)
+  const outerWrapperStyles = position ? 'absolute' : '';
+  
+  // Inline styles for absolute positioning and drag transform
+  const outerInlineStyles: React.CSSProperties | undefined = position
+    ? {
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        zIndex: isDragging ? 9999 : position.zIndex,
+        transform: dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined,
+        transition: 'none', // Always disable transition for positioned cards to prevent unwanted animations
+      }
+    : undefined;
+  
+  // Inner card styles (relative positioning for content layout)
   const baseStyles = 'relative aspect-[5/7] transition-all duration-200';
   
   // Location-specific styles (minimal background for empty state)
@@ -67,23 +81,7 @@ function CardComponent({
     ? 'w-20 sm:w-24 md:w-28'
     : 'w-20 sm:w-24 md:w-28 lg:w-32';
   
-  // Absolute positioning for playfield cards
-  const positionStyles = position
-    ? 'absolute'
-    : '';
-  
-  const cardClasses = `${baseStyles} ${locationStyles[location]} ${interactiveStyles} ${dragStyles} ${draggingStyles} ${disabledStyles} ${sizeStyles} ${positionStyles} ${className}`.trim();
-  
-  // Inline styles for absolute positioning and drag transform
-  const inlineStyles: React.CSSProperties | undefined = position
-    ? {
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: isDragging ? 9999 : position.zIndex,
-        transform: dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined,
-        transition: isDragging ? 'none' : undefined, // Disable transition during drag
-      }
-    : undefined;
+  const cardClasses = `${baseStyles} ${locationStyles[location]} ${interactiveStyles} ${dragStyles} ${draggingStyles} ${disabledStyles} ${sizeStyles} ${className}`.trim();
   
   const handleClick = () => {
     if (isClickable) {
@@ -116,51 +114,61 @@ function CardComponent({
     }
   };
   
-  return (
-    <>
-      <div
-        className={cardClasses}
-        style={inlineStyles}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onMouseDown={handleMouseDown}
-        role={isClickable ? 'button' : undefined}
-        tabIndex={isClickable ? 0 : undefined}
-        aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}
-        aria-disabled={disabled}
-      >
-        {/* Card image - full size */}
-        {card.imageUrl && !imageError ? (
-          <Image
-            src={card.imageUrl}
-            alt={card.name}
-            fill
-            className="object-cover"
-            onError={() => setImageError(true)}
-            unoptimized
-          />
-        ) : (
-          /* Fallback card with border and title when no image */
-          <div className="absolute inset-0 border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col items-center justify-center gap-3 p-3">
-            <div className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 text-center break-words">
-              {card.name}
-            </div>
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-            {imageError && (
-              <div className="text-xs text-red-500 dark:text-red-400 text-center">
-                Image unavailable
-              </div>
-            )}
+  // Card content (always relative for internal layout)
+  const cardContent = (
+    <div
+      className={cardClasses}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-label={`${card.name}${disabled ? ' (disabled)' : ''}`}
+      aria-disabled={disabled}
+    >
+      {/* Card image - full size */}
+      {card.imageUrl && !imageError ? (
+        <Image
+          src={card.imageUrl}
+          alt={card.name}
+          fill
+          className="object-cover"
+          onError={() => setImageError(true)}
+          unoptimized
+        />
+      ) : (
+        /* Fallback card with border and title when no image */
+        <div className="absolute inset-0 border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col items-center justify-center gap-3 p-3">
+          <div className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 text-center break-words">
+            {card.name}
           </div>
-        )}
-        
-        {/* Focus ring */}
-        <div className="absolute inset-0 ring-2 ring-transparent focus-within:ring-blue-500 dark:focus-within:ring-blue-400" />
-      </div>
-    </>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+          {imageError && (
+            <div className="text-xs text-red-500 dark:text-red-400 text-center">
+              Image unavailable
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Focus ring */}
+      <div className="absolute inset-0 ring-2 ring-transparent focus-within:ring-blue-500 dark:focus-within:ring-blue-400" />
+    </div>
   );
+  
+  // Wrap in absolute positioning wrapper if on playfield
+  if (position) {
+    return (
+      <div className="absolute" style={outerInlineStyles}>
+        {cardContent}
+      </div>
+    );
+  }
+  
+  // Otherwise return card content directly
+  return cardContent;
 }
 
 /**
