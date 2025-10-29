@@ -14,6 +14,7 @@ import { Deck } from './Deck';
 import { Card } from './Card';
 import type { PlayfieldProps } from '@/app/lib/types/game';
 import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
+import { useCardRotation } from '@/app/lib/hooks/useCardRotation';
 import type { PlayfieldBounds } from '@/app/lib/hooks/useDragAndDrop';
 
 /**
@@ -39,6 +40,8 @@ export function Playfield({
   onMoveCardToHand,
   onDiscardCard,
   onCardDragStart,
+  onCardMouseEnter,
+  onCardMouseLeave,
   playfieldRef: externalPlayfieldRef,
   dragState: externalDragState,
   endDrag: externalEndDrag,
@@ -54,6 +57,13 @@ export function Playfield({
   const endDrag = externalEndDrag || internalDragAndDrop.endDrag;
   const getDropZone = externalGetDropZone || internalDragAndDrop.getDropZone;
   const setDropZoneConfig = externalSetDropZoneConfig || internalDragAndDrop.setDropZoneConfig;
+  
+  // Initialize rotation hook (read-only, actual state managed by parent)
+  // We'll use getRotation to fetch rotation for each card
+  const { getRotation } = useCardRotation(
+    playfield.rotations,
+    () => {} // No-op setter since Playfield doesn't modify rotations
+  );
   
   const playfieldBoundsRef = useRef<PlayfieldBounds | null>(null);
   
@@ -208,25 +218,28 @@ export function Playfield({
           {playfield.cards.length > 0 ? (
             <>
               {playfield.cards.map((card) => {
-                const position = playfield.positions.get(card.id);
+                const storedPosition = playfield.positions.get(card.id);
+                const rotation = getRotation(card.id);
                 const isDraggingThisCard = dragState.isDragging && dragState.draggedCardId === card.id;
                 
-                // Calculate drag offset for CSS transform (GPU-accelerated, smooth)
+                // Calculate actual position during drag
+                let position = storedPosition;
                 let dragOffset: { x: number; y: number } | undefined;
-                if (isDraggingThisCard && dragState.currentPosition && dragState.startPosition) {
-                  // Only apply offset if mouse has moved
-                  const hasMoved = 
-                    dragState.currentPosition.x !== dragState.startPosition.x ||
-                    dragState.currentPosition.y !== dragState.startPosition.y;
+                
+                if (isDraggingThisCard && dragState.currentPosition && storedPosition && playfieldRef.current) {
+                  // Calculate the card's position in real-time during drag
+                  const rect = playfieldRef.current.getBoundingClientRect();
+                  const x = dragState.currentPosition.x - rect.left - dragState.offset.x;
+                  const y = dragState.currentPosition.y - rect.top - dragState.offset.y;
                   
-                  if (hasMoved) {
-                    // Transform = (current mouse - start mouse)
-                    // This moves the card by exactly how much the mouse moved
-                    dragOffset = {
-                      x: dragState.currentPosition.x - dragState.startPosition.x,
-                      y: dragState.currentPosition.y - dragState.startPosition.y,
-                    };
-                  }
+                  // Update position to follow cursor (instant, no transition)
+                  position = {
+                    cardId: card.id,
+                    x,
+                    y,
+                    zIndex: 9999, // Always on top while dragging
+                  };
+                  // No dragOffset needed since we're updating position directly
                 }
                 
                 return (
@@ -238,7 +251,10 @@ export function Playfield({
                     isDragging={isDraggingThisCard}
                     position={position}
                     dragOffset={dragOffset}
+                    rotation={rotation}
                     onDragStart={onCardDragStart}
+                    onMouseEnter={onCardMouseEnter}
+                    onMouseLeave={onCardMouseLeave}
                   />
                 );
               })}

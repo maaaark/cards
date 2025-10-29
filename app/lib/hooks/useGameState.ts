@@ -51,6 +51,7 @@ export function useGameState(): UseGameStateReturn {
   const [playfield, setPlayfield] = useState<Playfield>({ 
     cards: [], 
     positions: new Map(),
+    rotations: new Map(),
     nextZIndex: 1,
   });
   const [deckMetadata, setDeckMetadata] = useState<DeckMetadata | undefined>(undefined);
@@ -100,7 +101,7 @@ export function useGameState(): UseGameStateReturn {
           await saveGameState(sessionId, {
             deck: testDeck,
             hand: { cards: [] },
-            playfield: { cards: [], positions: new Map(), nextZIndex: 1 },
+            playfield: { cards: [], positions: new Map(), rotations: new Map(), nextZIndex: 1 },
             deckMetadata: {
               name: 'Test Deck',
               originalCardCount: testCards.length,
@@ -235,7 +236,7 @@ export function useGameState(): UseGameStateReturn {
     
     // Reset hand and playfield
     setHand({ cards: [] });
-    setPlayfield({ cards: [], positions: new Map(), nextZIndex: 1 });
+    setPlayfield({ cards: [], positions: new Map(), rotations: new Map(), nextZIndex: 1 });
     
     setError(undefined);
   }, []);
@@ -253,7 +254,7 @@ export function useGameState(): UseGameStateReturn {
     
     setDeck(testDeck);
     setHand({ cards: [] });
-    setPlayfield({ cards: [], positions: new Map(), nextZIndex: 1 });
+    setPlayfield({ cards: [], positions: new Map(), rotations: new Map(), nextZIndex: 1 });
     setDeckMetadata({
       name: 'Test Deck',
       originalCardCount: testCards.length,
@@ -351,11 +352,73 @@ export function useGameState(): UseGameStateReturn {
     const updatedPlayfieldCards = playfield.cards.filter(c => c.id !== cardId);
     const updatedPositions = new Map(playfield.positions);
     updatedPositions.delete(cardId);
+    const updatedRotations = new Map(playfield.rotations);
+    updatedRotations.delete(cardId);
     
     setPlayfield({
       ...playfield,
       cards: updatedPlayfieldCards,
       positions: updatedPositions,
+      rotations: updatedRotations,
+    });
+    
+    setError(undefined);
+  }, [playfield]);
+
+  /**
+   * Rotate a card on playfield by a delta (in degrees)
+   */
+  const rotateCard = useCallback((cardId: string, delta: number) => {
+    const cardExists = playfield.cards.some(c => c.id === cardId);
+    
+    if (!cardExists) {
+      setError('Card not found on playfield');
+      return;
+    }
+    
+    const currentRotation = playfield.rotations.get(cardId) ?? 0;
+    const newRotation = currentRotation + delta;
+    
+    // Normalize to 0-359 range
+    let normalizedRotation = newRotation % 360;
+    if (normalizedRotation < 0) {
+      normalizedRotation += 360;
+    }
+    
+    const updatedRotations = new Map(playfield.rotations);
+    updatedRotations.set(cardId, normalizedRotation);
+    
+    setPlayfield({
+      ...playfield,
+      rotations: updatedRotations,
+    });
+    
+    setError(undefined);
+  }, [playfield]);
+
+  /**
+   * Set a card's rotation to a specific angle (in degrees)
+   */
+  const setCardRotation = useCallback((cardId: string, degrees: number) => {
+    const cardExists = playfield.cards.some(c => c.id === cardId);
+    
+    if (!cardExists) {
+      setError('Card not found on playfield');
+      return;
+    }
+    
+    // Normalize to 0-359 range
+    let normalizedRotation = degrees % 360;
+    if (normalizedRotation < 0) {
+      normalizedRotation += 360;
+    }
+    
+    const updatedRotations = new Map(playfield.rotations);
+    updatedRotations.set(cardId, normalizedRotation);
+    
+    setPlayfield({
+      ...playfield,
+      rotations: updatedRotations,
     });
     
     setError(undefined);
@@ -376,5 +439,7 @@ export function useGameState(): UseGameStateReturn {
     updateCardPosition,
     moveCardToHand,
     discardCard,
+    rotateCard,
+    setCardRotation,
   };
 }

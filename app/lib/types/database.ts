@@ -42,6 +42,7 @@ export interface GameSessionRow {
   playfield_state: {
     cards: Card[];
     positions?: Record<string, { cardId: string; x: number; y: number; zIndex: number }>;
+    rotations?: Record<string, number>;
     nextZIndex?: number;
   };
   deck_metadata?: {

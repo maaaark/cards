@@ -35,22 +35,26 @@ function CardComponent({
   position,
   dragOffset,
   onDragStart,
+  rotation = 0,
+  onMouseEnter: onMouseEnterProp,
+  onMouseLeave: onMouseLeaveProp,
 }: CardProps) {
   const [imageError, setImageError] = useState(false);
   const { showPreview, hidePreview } = useCardPreview();
   const isClickable = onClick && !disabled;
   
-  // Outer wrapper styles (for absolute positioning on playfield)
-  const outerWrapperStyles = position ? 'absolute' : '';
-  
-  // Inline styles for absolute positioning and drag transform
+  // Inline styles for absolute positioning, drag transform, and rotation
   const outerInlineStyles: React.CSSProperties | undefined = position
     ? {
         left: `${position.x}px`,
         top: `${position.y}px`,
         zIndex: isDragging ? 9999 : position.zIndex,
-        transform: dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : undefined,
-        transition: 'none', // Always disable transition for positioned cards to prevent unwanted animations
+        transform: dragOffset 
+          ? `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`
+          : `rotate(${rotation}deg)`,
+        // Disable all transitions when dragging or when we have a drag offset
+        // Only enable rotation transitions when card is stationary
+        transition: (isDragging || dragOffset) ? 'none' : 'transform 0.3s ease-in-out',
       }
     : undefined;
   
@@ -96,13 +100,15 @@ function CardComponent({
     }
   };
 
-  // Preview handlers
+  // Preview and hover handlers
   const handleMouseEnter = () => {
     showPreview(card);
+    onMouseEnterProp?.(card);
   };
 
   const handleMouseLeave = () => {
     hidePreview(card.id);
+    onMouseLeaveProp?.(card);
   };
   
   // Drag handlers

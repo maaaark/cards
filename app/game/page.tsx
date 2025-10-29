@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useGameState } from '@/app/lib/hooks/useGameState';
 import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
 import { Playfield } from '@/app/components/game/Playfield';
@@ -40,14 +40,42 @@ function GamePageInner() {
     updateCardPosition,
     moveCardToHand,
     discardCard,
+    rotateCard,
   } = useGameState();
 
   const { previewState, previewPosition, previewDimensions } = useCardPreview();
   const { startDrag, dragState, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
   
+  // Track hovered card for rotation
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  
   const playfieldRef = useRef<HTMLDivElement>(null);
 
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  
+  // Keyboard handler for card rotation (E and Q keys)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle if a card is hovered and it's on the playfield
+      if (!hoveredCardId || !playfield.cards.some(c => c.id === hoveredCardId)) {
+        return;
+      }
+      
+      // Check for E key (rotate 90° clockwise)
+      if (event.key === 'e' || event.key === 'E') {
+        event.preventDefault();
+        rotateCard(hoveredCardId, 90);
+      }
+      // Check for Q key (rotate 90° counter-clockwise)
+      else if (event.key === 'q' || event.key === 'Q') {
+        event.preventDefault();
+        rotateCard(hoveredCardId, -90);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hoveredCardId, playfield.cards, rotateCard]);
   
   // Unified handler for all card drag starts (hand or playfield)
   const handleCardDragStart = useCallback((card: Card, event: React.MouseEvent) => {
@@ -93,6 +121,19 @@ function GamePageInner() {
       customOffset,
     });
   }, [playfield, startDrag]);
+  
+  // Hover handlers for rotation feature
+  const handleCardMouseEnter = useCallback((card: Card) => {
+    // Only track hover for playfield cards
+    if (playfield.cards.some(c => c.id === card.id)) {
+      setHoveredCardId(card.id);
+    }
+  }, [playfield.cards]);
+  
+  const handleCardMouseLeave = useCallback((card: Card) => {
+    // Clear hover if this was the hovered card
+    setHoveredCardId(prev => prev === card.id ? null : prev);
+  }, []);
 
   const handleImport = (deckImport: { name: string; cards: Array<{ id: string; name: string; imageUrl?: string; metadata?: Record<string, unknown> }> }) => {
     importDeck(deckImport);
@@ -213,6 +254,8 @@ function GamePageInner() {
         onMoveCardToHand={moveCardToHand}
         onDiscardCard={discardCard}
         onCardDragStart={handleCardDragStart}
+        onCardMouseEnter={handleCardMouseEnter}
+        onCardMouseLeave={handleCardMouseLeave}
         playfieldRef={playfieldRef}
         dragState={dragState}
         endDrag={endDrag}

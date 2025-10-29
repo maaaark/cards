@@ -80,6 +80,9 @@ export interface Playfield {
   /** Card positions for drag/drop support (REQUIRED for drag-drop) */
   positions: Map<string, CardPosition>;
   
+  /** Card rotations for tap/untap support (degrees: 0, 90, 180, 270) */
+  rotations: Map<string, number>;
+  
   /** Next available z-index value (auto-increments) */
   nextZIndex: number;
 }
@@ -221,6 +224,9 @@ export interface GameSessionRow {
   /** Playfield state as JSONB */
   playfield_state: {
     cards: Card[];
+    positions: Record<string, CardPosition>;
+    rotations: Record<string, number>;
+    nextZIndex: number;
   };
   
   /** Deck metadata as JSONB */
@@ -266,6 +272,13 @@ export interface CardProps {
   position?: CardPosition;
   dragOffset?: { x: number; y: number }; // Offset during drag for transform
   onDragStart?: (card: Card, event: React.MouseEvent) => void;
+  
+  /** Card rotation (in degrees, 0-359) */
+  rotation?: number;
+  
+  /** Hover handlers for rotation feature */
+  onMouseEnter?: (card: Card) => void;
+  onMouseLeave?: (card: Card) => void;
 }
 
 /**
@@ -320,6 +333,10 @@ export interface PlayfieldProps {
   
   /** Handler for card drag start (unified for hand and playfield) */
   onCardDragStart?: (card: Card, event: React.MouseEvent) => void;
+  
+  /** Handler for card hover (for rotation feature) */
+  onCardMouseEnter?: (card: Card) => void;
+  onCardMouseLeave?: (card: Card) => void;
   
   /** Ref to the playfield element */
   playfieldRef?: React.RefObject<HTMLDivElement | null>;
@@ -397,6 +414,12 @@ export interface UseGameStateReturn {
   
   /** Discard a card from playfield (remove from game) */
   discardCard: (cardId: string) => void;
+  
+  /** Rotate a card on playfield by a delta (in degrees) */
+  rotateCard: (cardId: string, delta: number) => void;
+  
+  /** Set a card's rotation to a specific angle (in degrees) */
+  setCardRotation: (cardId: string, degrees: number) => void;
 }
 
 /**

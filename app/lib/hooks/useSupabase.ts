@@ -82,6 +82,11 @@ export function useSupabase(): UseSupabaseReturn {
               ? Object.entries(data.playfield_state.positions)
               : []
           ),
+          rotations: new Map(
+            data.playfield_state.rotations 
+              ? Object.entries(data.playfield_state.rotations)
+              : []
+          ),
           nextZIndex: data.playfield_state.nextZIndex ?? 1,
         },
         deckMetadata: data.deck_metadata ? {
@@ -136,6 +141,7 @@ export function useSupabase(): UseSupabaseReturn {
         playfield_state: {
           cards: state.playfield.cards,
           positions: Object.fromEntries(state.playfield.positions),
+          rotations: Object.fromEntries(state.playfield.rotations),
           nextZIndex: state.playfield.nextZIndex,
         },
         deck_metadata: state.deckMetadata ? {
