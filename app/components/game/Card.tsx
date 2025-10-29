@@ -52,8 +52,8 @@ function CardComponent({
         transform: dragOffset 
           ? `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`
           : `rotate(${rotation}deg)`,
-        // Disable all transitions when dragging or when we have a drag offset
-        // Only enable rotation transitions when card is stationary
+        // Disable transitions when dragging or when we have drag offset
+        // Enable smooth rotation transitions when card is stationary
         transition: (isDragging || dragOffset) ? 'none' : 'transform 0.3s ease-in-out',
       }
     : undefined;

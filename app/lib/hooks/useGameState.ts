@@ -379,14 +379,8 @@ export function useGameState(): UseGameStateReturn {
     const currentRotation = playfield.rotations.get(cardId) ?? 0;
     const newRotation = currentRotation + delta;
     
-    // Normalize to 0-359 range
-    let normalizedRotation = newRotation % 360;
-    if (normalizedRotation < 0) {
-      normalizedRotation += 360;
-    }
-    
     const updatedRotations = new Map(playfield.rotations);
-    updatedRotations.set(cardId, normalizedRotation);
+    updatedRotations.set(cardId, newRotation);
     
     setPlayfield({
       ...playfield,
