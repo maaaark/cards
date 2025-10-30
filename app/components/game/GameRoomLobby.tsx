@@ -14,6 +14,7 @@ import { supabase } from '@/app/lib/supabase/client';
 import { listGameRooms } from '@/app/lib/utils/game-room';
 import { usePlayerSession } from '@/app/lib/hooks/usePlayerSession';
 import { useGameRoom } from '@/app/lib/hooks/useGameRoom';
+import { createPlayerSession } from '@/app/lib/utils/player-session';
 import type { MultiplayerGameSession } from '@/app/lib/types/multiplayer';
 import { Button } from '../ui/Button';
 
@@ -78,8 +79,12 @@ export function GameRoomLobby() {
     try {
       setError('');
       
-      // Set player session if not exists
-      if (!playerId) {
+      // Ensure player session exists BEFORE creating room
+      let currentPlayerId = playerId;
+      if (!currentPlayerId) {
+        const session = createPlayerSession(displayNameInput);
+        currentPlayerId = session.playerId;
+        // Update hook state (but don't wait for it)
         setDisplayName(displayNameInput);
       }
 
@@ -102,8 +107,12 @@ export function GameRoomLobby() {
     try {
       setError('');
       
-      // Set player session if not exists
-      if (!playerId) {
+      // Ensure player session exists BEFORE joining room
+      let currentPlayerId = playerId;
+      if (!currentPlayerId) {
+        const session = createPlayerSession(displayNameInput);
+        currentPlayerId = session.playerId;
+        // Update hook state (but don't wait for it)
         setDisplayName(displayNameInput);
       }
 

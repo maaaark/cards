@@ -96,25 +96,22 @@ CREATE POLICY "players_delete_own"
 -- Step 6: Enable RLS on game_sessions table (if not already enabled)
 ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "game_sessions_select_all"
+-- Allow all anonymous users to view game sessions
+CREATE POLICY "select_all_game_sessions"
   ON game_sessions FOR SELECT
   USING (TRUE);
 
-CREATE POLICY "game_sessions_update_playfield"
+-- Allow all anonymous users to update game sessions (for auto-save)
+CREATE POLICY "update_game_sessions_anonymous"
   ON game_sessions FOR UPDATE
-  USING (
-    id IN (
-      SELECT game_id FROM players 
-      WHERE player_id = current_setting('app.player_id', TRUE)::UUID
-    )
-  );
+  USING (TRUE);
 
-CREATE POLICY "game_sessions_insert_all"
+-- Allow all anonymous users to create game sessions
+CREATE POLICY "insert_game_session"
   ON game_sessions FOR INSERT
   WITH CHECK (TRUE);
 
-CREATE POLICY "game_sessions_delete_by_creator"
+-- Allow all anonymous users to delete game sessions
+CREATE POLICY "delete_game_sessions_anonymous"
   ON game_sessions FOR DELETE
-  USING (
-    creator_player_id = current_setting('app.player_id', TRUE)::UUID
-  );
+  USING (TRUE);

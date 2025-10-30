@@ -11,12 +11,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { supabase } from '@/app/lib/supabase/client';
 import { useGameRoom } from '@/app/lib/hooks/useGameRoom';
 import { useRealtimeGameRoom } from '@/app/lib/hooks/useRealtimeGameRoom';
 import { usePlayerSession } from '@/app/lib/hooks/usePlayerSession';
 import { useGameState } from '@/app/lib/hooks/useGameState';
-import { getGameRoom } from '@/app/lib/utils/game-room';
 import { PlayerList } from '@/app/components/game/PlayerList';
 import { ConnectionStatus } from '@/app/components/game/ConnectionStatus';
 import { Playfield } from '@/app/components/game/Playfield';
@@ -30,7 +28,7 @@ export default function MultiplayerGamePage() {
   const gameId = params.id as string;
 
   const { playerId } = usePlayerSession();
-  const { gameRoom, leaveGameRoom, closeGameRoom, updatePlayfieldState } = useGameRoom();
+  const { gameRoom, loadGameRoom, leaveGameRoom, closeGameRoom, updatePlayfieldState } = useGameRoom();
   const { connectionState, subscribe, unsubscribe } = useRealtimeGameRoom();
 
   const [isInitializing, setIsInitializing] = useState(true);
@@ -45,13 +43,8 @@ export default function MultiplayerGamePage() {
 
     const initialize = async () => {
       try {
-        // Load initial game room state
-        const room = await getGameRoom(supabase, gameId);
-        if (!room) {
-          console.error('Game room not found');
-          router.push('/lobby');
-          return;
-        }
+        // Load game room state into the hook
+        await loadGameRoom(gameId);
 
         // Subscribe to real-time updates (state sync will happen via callbacks)
         await subscribe(gameId, {
@@ -76,6 +69,8 @@ export default function MultiplayerGamePage() {
       } catch (error) {
         console.error('Failed to initialize:', error);
         setIsInitializing(false);
+        // If loading failed, redirect to lobby
+        router.push('/lobby');
       }
     };
 
@@ -84,7 +79,7 @@ export default function MultiplayerGamePage() {
     return () => {
       unsubscribe();
     };
-  }, [playerId, gameId, subscribe, unsubscribe, router]);
+  }, [playerId, gameId, loadGameRoom, subscribe, unsubscribe, router]);
 
   const handleLeaveRoom = async () => {
     if (confirm('Are you sure you want to leave this game room?')) {

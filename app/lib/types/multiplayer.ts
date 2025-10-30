@@ -239,6 +239,9 @@ export interface UseGameRoomReturn {
   /** Leave current game room */
   leaveGameRoom: () => Promise<void>;
   
+  /** Load an existing game room (for direct navigation) */
+  loadGameRoom: (gameId: string) => Promise<void>;
+  
   /** Update current player's display name */
   updateDisplayName: (newName: string) => Promise<void>;
   

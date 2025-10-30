@@ -317,6 +317,54 @@ export function useGameRoom(): UseGameRoomReturn {
   }, [gameRoom.session]);
 
   /**
+   * Load an existing game room (for direct navigation to game page).
+   */
+  const loadGameRoom = useCallback(async (gameId: string): Promise<void> => {
+    setGameRoom(prev => ({ ...prev, isLoading: true, error: undefined }));
+
+    try {
+      const playerId = getCurrentPlayerId();
+      if (!playerId) {
+        throw new Error('No player session found');
+      }
+
+      // Store current game ID
+      setCurrentGameId(gameId);
+
+      // Load the game room
+      const session = await getGameRoom(supabase, gameId);
+      if (!session) {
+        throw new Error('Game room not found');
+      }
+
+      // Check if player is a member
+      const currentPlayer = session.players.find(p => p.playerId === playerId);
+      if (!currentPlayer) {
+        throw new Error('You are not a member of this game room');
+      }
+
+      setGameRoom({
+        session,
+        currentPlayer,
+        connectionState: {
+          status: 'connected',
+          reconnectAttempts: 0,
+        },
+        isLoading: false,
+        error: undefined,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load game room';
+      setGameRoom(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: errorMessage 
+      }));
+      throw error;
+    }
+  }, []);
+
+  /**
    * Broadcast message to all players (placeholder for Realtime).
    */
   const broadcastMessage = useCallback((message: { type: string; payload: unknown }) => {
@@ -329,6 +377,7 @@ export function useGameRoom(): UseGameRoomReturn {
     createGameRoom,
     joinGameRoom,
     leaveGameRoom,
+    loadGameRoom,
     updateDisplayName,
     closeGameRoom,
     updatePlayfieldState,
