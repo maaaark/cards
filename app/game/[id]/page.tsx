@@ -9,20 +9,29 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useGameRoom } from '@/app/lib/hooks/useGameRoom';
 import { useRealtimeGameRoom } from '@/app/lib/hooks/useRealtimeGameRoom';
 import { usePlayerSession } from '@/app/lib/hooks/usePlayerSession';
 import { useGameState } from '@/app/lib/hooks/useGameState';
+import { useCardPreview } from '@/app/lib/hooks/useCardPreview';
+import { useDragAndDrop } from '@/app/lib/hooks/useDragAndDrop';
+import { AltKeyProvider } from '@/app/lib/contexts/AltKeyContext';
+import { CardPreviewProvider } from '@/app/lib/contexts/CardPreviewContext';
 import { PlayerList } from '@/app/components/game/PlayerList';
 import { ConnectionStatus } from '@/app/components/game/ConnectionStatus';
 import { Playfield } from '@/app/components/game/Playfield';
 import { Hand } from '@/app/components/game/Hand';
+import { CardPreview } from '@/app/components/game/CardPreview';
 import { Button } from '@/app/components/ui/Button';
 import type { CardPosition } from '@/app/lib/hooks/useDragAndDrop';
+import type { Card } from '@/app/lib/types/game';
 
-export default function MultiplayerGamePage() {
+/**
+ * Inner multiplayer game page component (needs to be inside providers).
+ */
+function MultiplayerGamePageInner() {
   const params = useParams();
   const router = useRouter();
   const gameId = params.id as string;
@@ -33,9 +42,114 @@ export default function MultiplayerGamePage() {
 
   const [isInitializing, setIsInitializing] = useState(true);
   const [showPlayerList, setShowPlayerList] = useState(true);
+  const [hasLoadedInitialState, setHasLoadedInitialState] = useState(false);
   
   // Game state hook for card management
   const gameState = useGameState();
+  
+  // Card preview hook
+  const { previewState, previewPosition, previewDimensions } = useCardPreview();
+  
+  // Drag and drop hook
+  const { startDrag, dragState, endDrag, getDropZone, setDropZoneConfig } = useDragAndDrop();
+  
+  // Track hovered card for rotation
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  
+  const playfieldRef = useRef<HTMLDivElement>(null);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced sync function
+  const syncPlayfieldState = useCallback(() => {
+    // Clear existing timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+    
+    // Debounce the sync to avoid too many updates
+    syncTimeoutRef.current = setTimeout(() => {
+      updatePlayfieldState({
+        cards: gameState.playfield.cards,
+        positions: Object.fromEntries(gameState.playfield.positions),
+        rotations: Object.fromEntries(gameState.playfield.rotations),
+        nextZIndex: gameState.playfield.nextZIndex,
+      });
+    }, 300); // 300ms debounce
+  }, [gameState.playfield, updatePlayfieldState]);
+
+  // Unified handler for all card drag starts (hand or playfield)
+  const handleCardDragStart = useCallback((card: Card, event: React.MouseEvent) => {
+    // Determine if card is on playfield or in hand
+    const isOnPlayfield = gameState.playfield.cards.some(c => c.id === card.id);
+    const source = isOnPlayfield ? 'playfield' : 'hand';
+    
+    // Get current position if on playfield
+    const currentPosition = gameState.playfield.positions.get(card.id);
+    
+    const originalPosition = currentPosition
+      ? { ...currentPosition, cardId: card.id }
+      : undefined;
+    
+    // Calculate offset for drag
+    let customOffset: { x: number; y: number } | undefined;
+    
+    if (isOnPlayfield && currentPosition && playfieldRef.current) {
+      // For playfield cards: calculate offset relative to playfield coordinates
+      const playfieldRect = playfieldRef.current.getBoundingClientRect();
+      const mouseX = event.clientX - playfieldRect.left;
+      const mouseY = event.clientY - playfieldRect.top;
+      customOffset = {
+        x: mouseX - currentPosition.x,
+        y: mouseY - currentPosition.y,
+      };
+    } else if (!isOnPlayfield) {
+      // For hand cards: use default centered offset
+      customOffset = undefined;
+    }
+    
+    startDrag({
+      card,
+      source,
+      event,
+      originalPosition,
+      customOffset,
+    });
+  }, [gameState.playfield.cards, gameState.playfield.positions, startDrag]);
+
+  // Handler for card mouse enter (for rotation)
+  const handleCardMouseEnter = useCallback((card: Card) => {
+    setHoveredCardId(card.id);
+  }, []);
+
+  // Handler for card mouse leave (for rotation)
+  const handleCardMouseLeave = useCallback(() => {
+    setHoveredCardId(null);
+  }, []);
+
+  // Keyboard handler for card rotation (E and Q keys)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle if a card is hovered and it's on the playfield
+      if (!hoveredCardId || !gameState.playfield.cards.some(c => c.id === hoveredCardId)) {
+        return;
+      }
+      
+      // Check for E key (rotate 90° clockwise)
+      if (event.key === 'e' || event.key === 'E') {
+        event.preventDefault();
+        gameState.rotateCard(hoveredCardId, 90);
+      }
+      // Check for Q key (rotate 90° counter-clockwise)
+      else if (event.key === 'q' || event.key === 'Q') {
+        event.preventDefault();
+        gameState.rotateCard(hoveredCardId, -90);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredCardId]);
 
   // Initialize game room and Realtime connection
   useEffect(() => {
@@ -50,6 +164,23 @@ export default function MultiplayerGamePage() {
         await subscribe(gameId, {
           onGameSessionUpdate: (session) => {
             console.log('Game session updated:', session);
+            
+            // Update local playfield state from server
+            if (session.playfieldState) {
+              const { cards, positions, rotations, nextZIndex } = session.playfieldState;
+              
+              // Convert position/rotation objects to Maps
+              const positionsMap = new Map(Object.entries(positions || {}).map(([id, pos]) => [id, pos]));
+              const rotationsMap = new Map(Object.entries(rotations || {}).map(([id, rot]) => [id, rot]));
+              
+              // Update playfield state
+              gameState.loadPlayfieldState({
+                cards: cards || [],
+                positions: positionsMap,
+                rotations: rotationsMap,
+                nextZIndex: nextZIndex || 1,
+              });
+            }
           },
           onPlayerUpdate: (player) => {
             console.log('Player updated:', player);
@@ -79,7 +210,31 @@ export default function MultiplayerGamePage() {
     return () => {
       unsubscribe();
     };
-  }, [playerId, gameId, loadGameRoom, subscribe, unsubscribe, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerId, gameId]);
+
+  // Load initial playfield state from game room after it's loaded
+  useEffect(() => {
+    if (gameRoom.session?.playfieldState && !hasLoadedInitialState) {
+      const { cards, positions, rotations, nextZIndex } = gameRoom.session.playfieldState;
+      
+      // Convert position/rotation objects to Maps
+      const positionsMap = new Map(Object.entries(positions || {}).map(([id, pos]) => [id, pos]));
+      const rotationsMap = new Map(Object.entries(rotations || {}).map(([id, rot]) => [id, rot]));
+      
+      // Update playfield state
+      gameState.loadPlayfieldState({
+        cards: cards || [],
+        positions: positionsMap,
+        rotations: rotationsMap,
+        nextZIndex: nextZIndex || 1,
+      });
+      
+      // Mark initial state as loaded (delayed to avoid cascading renders)
+      queueMicrotask(() => setHasLoadedInitialState(true));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameRoom.session, hasLoadedInitialState]);
 
   const handleLeaveRoom = async () => {
     if (confirm('Are you sure you want to leave this game room?')) {
@@ -102,50 +257,30 @@ export default function MultiplayerGamePage() {
     }
   };
   
-  // Handle card actions with sync + broadcast
+  // Handle card actions (synced after each action)
   const handleDrawCard = () => {
     gameState.drawCard();
+    // No sync needed - deck/hand are local
   };
   
   const handleMoveCardToPlayfield = (cardId: string, position: CardPosition) => {
     gameState.moveCardToPlayfield(cardId, position);
-    // Sync playfield only (not full game state)
-    updatePlayfieldState({
-      cards: gameState.playfield.cards,
-      positions: Object.fromEntries(gameState.playfield.positions),
-      rotations: Object.fromEntries(gameState.playfield.rotations),
-      nextZIndex: gameState.playfield.nextZIndex,
-    });
+    syncPlayfieldState();
   };
   
   const handleUpdateCardPosition = (cardId: string, position: CardPosition) => {
     gameState.updateCardPosition(cardId, position);
-    updatePlayfieldState({
-      cards: gameState.playfield.cards,
-      positions: Object.fromEntries(gameState.playfield.positions),
-      rotations: Object.fromEntries(gameState.playfield.rotations),
-      nextZIndex: gameState.playfield.nextZIndex,
-    });
+    syncPlayfieldState();
   };
   
   const handleMoveCardToHand = (cardId: string) => {
     gameState.moveCardToHand(cardId);
-    updatePlayfieldState({
-      cards: gameState.playfield.cards,
-      positions: Object.fromEntries(gameState.playfield.positions),
-      rotations: Object.fromEntries(gameState.playfield.rotations),
-      nextZIndex: gameState.playfield.nextZIndex,
-    });
+    syncPlayfieldState();
   };
   
   const handleDiscardCard = (cardId: string) => {
     gameState.discardCard(cardId);
-    updatePlayfieldState({
-      cards: gameState.playfield.cards,
-      positions: Object.fromEntries(gameState.playfield.positions),
-      rotations: Object.fromEntries(gameState.playfield.rotations),
-      nextZIndex: gameState.playfield.nextZIndex,
-    });
+    syncPlayfieldState();
   };
 
   if (isInitializing) {
@@ -263,6 +398,14 @@ export default function MultiplayerGamePage() {
                   onUpdateCardPosition={handleUpdateCardPosition}
                   onMoveCardToHand={handleMoveCardToHand}
                   onDiscardCard={handleDiscardCard}
+                  onCardDragStart={handleCardDragStart}
+                  onCardMouseEnter={handleCardMouseEnter}
+                  onCardMouseLeave={handleCardMouseLeave}
+                  playfieldRef={playfieldRef}
+                  dragState={dragState}
+                  endDrag={endDrag}
+                  getDropZone={getDropZone}
+                  setDropZoneConfig={setDropZoneConfig}
                 />
               </div>
             </div>
@@ -271,7 +414,32 @@ export default function MultiplayerGamePage() {
       </div>
       
       {/* Hand - fixed at bottom */}
-      <Hand hand={gameState.hand} />
+      <Hand 
+        hand={gameState.hand}
+        onCardDragStart={handleCardDragStart}
+      />
+
+      {/* Card preview overlay (renders when ALT+hover) */}
+      {previewState.isActive && previewState.card && previewPosition && (
+        <CardPreview
+          card={previewState.card}
+          position={previewPosition}
+          dimensions={previewDimensions}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * Multiplayer game page component with providers.
+ */
+export default function MultiplayerGamePage() {
+  return (
+    <AltKeyProvider>
+      <CardPreviewProvider>
+        <MultiplayerGamePageInner />
+      </CardPreviewProvider>
+    </AltKeyProvider>
   );
 }

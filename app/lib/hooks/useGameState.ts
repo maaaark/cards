@@ -418,6 +418,13 @@ export function useGameState(): UseGameStateReturn {
     setError(undefined);
   }, [playfield]);
 
+  /**
+   * Load playfield state (for multiplayer sync).
+   */
+  const loadPlayfieldState = useCallback((newPlayfield: Playfield) => {
+    setPlayfield(newPlayfield);
+  }, []);
+
   return {
     deck,
     hand,
@@ -435,5 +442,6 @@ export function useGameState(): UseGameStateReturn {
     discardCard,
     rotateCard,
     setCardRotation,
+    loadPlayfieldState,
   };
 }

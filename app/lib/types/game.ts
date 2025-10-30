@@ -420,6 +420,9 @@ export interface UseGameStateReturn {
   
   /** Set a card's rotation to a specific angle (in degrees) */
   setCardRotation: (cardId: string, degrees: number) => void;
+  
+  /** Load playfield state (for multiplayer sync) */
+  loadPlayfieldState: (playfield: Playfield) => void;
 }
 
 /**
