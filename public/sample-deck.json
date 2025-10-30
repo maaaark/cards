@@ -1,185 +1,61 @@
 {
-  "name": "Sample Fantasy Deck",
+  "name": "Sample Playing Cards",
+  "description": "A standard 52-card deck for testing multiplayer game rooms",
   "cards": [
-    {
-      "id": "wizard-001",
-      "name": "Arcane Wizard",
-      "metadata": {
-        "type": "creature",
-        "power": 3,
-        "cost": 4
-      }
-    },
-    {
-      "id": "warrior-001",
-      "name": "Brave Knight",
-      "metadata": {
-        "type": "creature",
-        "power": 5,
-        "cost": 3
-      }
-    },
-    {
-      "id": "spell-001",
-      "name": "Fireball",
-      "metadata": {
-        "type": "spell",
-        "damage": 4,
-        "cost": 2
-      }
-    },
-    {
-      "id": "spell-002",
-      "name": "Lightning Bolt",
-      "metadata": {
-        "type": "spell",
-        "damage": 3,
-        "cost": 1
-      }
-    },
-    {
-      "id": "creature-001",
-      "name": "Ancient Dragon",
-      "metadata": {
-        "type": "creature",
-        "power": 10,
-        "cost": 8
-      }
-    },
-    {
-      "id": "creature-002",
-      "name": "Elven Archer",
-      "metadata": {
-        "type": "creature",
-        "power": 2,
-        "cost": 2
-      }
-    },
-    {
-      "id": "spell-003",
-      "name": "Healing Touch",
-      "metadata": {
-        "type": "spell",
-        "healing": 5,
-        "cost": 3
-      }
-    },
-    {
-      "id": "creature-003",
-      "name": "Goblin Scout",
-      "metadata": {
-        "type": "creature",
-        "power": 1,
-        "cost": 1
-      }
-    },
-    {
-      "id": "spell-004",
-      "name": "Ice Shield",
-      "metadata": {
-        "type": "spell",
-        "defense": 4,
-        "cost": 3
-      }
-    },
-    {
-      "id": "creature-004",
-      "name": "Shadow Assassin",
-      "metadata": {
-        "type": "creature",
-        "power": 4,
-        "cost": 4
-      }
-    },
-    {
-      "id": "spell-005",
-      "name": "Time Warp",
-      "metadata": {
-        "type": "spell",
-        "effect": "extra turn",
-        "cost": 6
-      }
-    },
-    {
-      "id": "creature-005",
-      "name": "Stone Golem",
-      "metadata": {
-        "type": "creature",
-        "power": 6,
-        "cost": 5
-      }
-    },
-    {
-      "id": "spell-006",
-      "name": "Mind Control",
-      "metadata": {
-        "type": "spell",
-        "effect": "steal creature",
-        "cost": 5
-      }
-    },
-    {
-      "id": "creature-006",
-      "name": "Forest Spirit",
-      "metadata": {
-        "type": "creature",
-        "power": 3,
-        "cost": 3
-      }
-    },
-    {
-      "id": "spell-007",
-      "name": "Meteor Storm",
-      "metadata": {
-        "type": "spell",
-        "damage": 7,
-        "cost": 6
-      }
-    },
-    {
-      "id": "creature-007",
-      "name": "Celestial Angel",
-      "metadata": {
-        "type": "creature",
-        "power": 7,
-        "cost": 6
-      }
-    },
-    {
-      "id": "spell-008",
-      "name": "Dark Ritual",
-      "metadata": {
-        "type": "spell",
-        "effect": "mana boost",
-        "cost": 1
-      }
-    },
-    {
-      "id": "creature-008",
-      "name": "Vampire Lord",
-      "metadata": {
-        "type": "creature",
-        "power": 5,
-        "cost": 5
-      }
-    },
-    {
-      "id": "spell-009",
-      "name": "Resurrection",
-      "metadata": {
-        "type": "spell",
-        "effect": "revive creature",
-        "cost": 4
-      }
-    },
-    {
-      "id": "creature-009",
-      "name": "Phoenix",
-      "metadata": {
-        "type": "creature",
-        "power": 4,
-        "cost": 4
-      }
-    }
+    { "id": "card-1", "name": "Ace of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=A♠" },
+    { "id": "card-2", "name": "2 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=2♠" },
+    { "id": "card-3", "name": "3 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=3♠" },
+    { "id": "card-4", "name": "4 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=4♠" },
+    { "id": "card-5", "name": "5 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=5♠" },
+    { "id": "card-6", "name": "6 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=6♠" },
+    { "id": "card-7", "name": "7 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=7♠" },
+    { "id": "card-8", "name": "8 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=8♠" },
+    { "id": "card-9", "name": "9 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=9♠" },
+    { "id": "card-10", "name": "10 of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=10♠" },
+    { "id": "card-11", "name": "Jack of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=J♠" },
+    { "id": "card-12", "name": "Queen of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=Q♠" },
+    { "id": "card-13", "name": "King of Spades", "imageUrl": "https://placehold.co/150x210/1a1a1a/ffffff?text=K♠" },
+    
+    { "id": "card-14", "name": "Ace of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=A♥" },
+    { "id": "card-15", "name": "2 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=2♥" },
+    { "id": "card-16", "name": "3 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=3♥" },
+    { "id": "card-17", "name": "4 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=4♥" },
+    { "id": "card-18", "name": "5 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=5♥" },
+    { "id": "card-19", "name": "6 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=6♥" },
+    { "id": "card-20", "name": "7 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=7♥" },
+    { "id": "card-21", "name": "8 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=8♥" },
+    { "id": "card-22", "name": "9 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=9♥" },
+    { "id": "card-23", "name": "10 of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=10♥" },
+    { "id": "card-24", "name": "Jack of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=J♥" },
+    { "id": "card-25", "name": "Queen of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=Q♥" },
+    { "id": "card-26", "name": "King of Hearts", "imageUrl": "https://placehold.co/150x210/dc2626/ffffff?text=K♥" },
+    
+    { "id": "card-27", "name": "Ace of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=A♦" },
+    { "id": "card-28", "name": "2 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=2♦" },
+    { "id": "card-29", "name": "3 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=3♦" },
+    { "id": "card-30", "name": "4 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=4♦" },
+    { "id": "card-31", "name": "5 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=5♦" },
+    { "id": "card-32", "name": "6 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=6♦" },
+    { "id": "card-33", "name": "7 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=7♦" },
+    { "id": "card-34", "name": "8 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=8♦" },
+    { "id": "card-35", "name": "9 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=9♦" },
+    { "id": "card-36", "name": "10 of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=10♦" },
+    { "id": "card-37", "name": "Jack of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=J♦" },
+    { "id": "card-38", "name": "Queen of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=Q♦" },
+    { "id": "card-39", "name": "King of Diamonds", "imageUrl": "https://placehold.co/150x210/ea580c/ffffff?text=K♦" },
+    
+    { "id": "card-40", "name": "Ace of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=A♣" },
+    { "id": "card-41", "name": "2 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=2♣" },
+    { "id": "card-42", "name": "3 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=3♣" },
+    { "id": "card-43", "name": "4 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=4♣" },
+    { "id": "card-44", "name": "5 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=5♣" },
+    { "id": "card-45", "name": "6 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=6♣" },
+    { "id": "card-46", "name": "7 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=7♣" },
+    { "id": "card-47", "name": "8 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=8♣" },
+    { "id": "card-48", "name": "9 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=9♣" },
+    { "id": "card-49", "name": "10 of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=10♣" },
+    { "id": "card-50", "name": "Jack of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=J♣" },
+    { "id": "card-51", "name": "Queen of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=Q♣" },
+    { "id": "card-52", "name": "King of Clubs", "imageUrl": "https://placehold.co/150x210/059669/ffffff?text=K♣" }
   ]
 }

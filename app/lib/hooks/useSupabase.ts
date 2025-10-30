@@ -11,12 +11,18 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import type { GameState, Deck, Hand, Playfield, DeckMetadata } from '../types/game';
+import type { GameState, Deck, Hand, Playfield, DeckMetadata, Card, CardPosition } from '../types/game';
 import type { UseSupabaseReturn } from '../types/game';
-import type { GameSessionRow, GameSessionInsert } from '../types/database';
+import type { Database } from '../types/database';
+
+type GameSessionRow = Database['public']['Tables']['game_sessions']['Row'];
+type GameSessionInsert = Database['public']['Tables']['game_sessions']['Insert'];
 
 /**
  * Hook for Supabase database operations.
+ * 
+ * Note: RLS (Row Level Security) is configured using current_setting('app.player_id')
+ * in database policies. The player ID is automatically managed by the client.
  * 
  * @returns Object with database operation functions and loading/error state
  * 
@@ -64,35 +70,44 @@ export function useSupabase(): UseSupabaseReturn {
       }
 
       // Convert database row to GameState
+      const deckState = data.deck_state as unknown as { cards: unknown[]; originalCount: number; name?: string };
+      const handState = data.hand_state as unknown as { cards: unknown[]; maxSize?: number };
+      const playfieldState = data.playfield_state as unknown as { 
+        cards: unknown[]; 
+        positions?: Record<string, unknown>; 
+        rotations?: Record<string, number>; 
+        nextZIndex?: number 
+      };
+      
       const gameState: GameState = {
         sessionId: data.session_id,
         deck: {
-          cards: data.deck_state.cards,
-          originalCount: data.deck_state.originalCount,
-          name: data.deck_state.name,
+          cards: deckState.cards as Card[],
+          originalCount: deckState.originalCount,
+          name: deckState.name,
         },
         hand: {
-          cards: data.hand_state.cards,
-          maxSize: data.hand_state.maxSize,
+          cards: handState.cards as Card[],
+          maxSize: handState.maxSize,
         },
         playfield: {
-          cards: data.playfield_state.cards,
+          cards: playfieldState.cards as Card[],
           positions: new Map(
-            data.playfield_state.positions 
-              ? Object.entries(data.playfield_state.positions)
+            playfieldState.positions 
+              ? Object.entries(playfieldState.positions) as [string, CardPosition][]
               : []
           ),
           rotations: new Map(
-            data.playfield_state.rotations 
-              ? Object.entries(data.playfield_state.rotations)
+            playfieldState.rotations 
+              ? Object.entries(playfieldState.rotations)
               : []
           ),
-          nextZIndex: data.playfield_state.nextZIndex ?? 1,
+          nextZIndex: playfieldState.nextZIndex ?? 1,
         },
         deckMetadata: data.deck_metadata ? {
-          name: data.deck_metadata.name,
-          originalCardCount: data.deck_metadata.originalCardCount,
-          importedAt: new Date(data.deck_metadata.importedAt),
+          name: (data.deck_metadata as {name: string}).name,
+          originalCardCount: (data.deck_metadata as {originalCardCount: number}).originalCardCount,
+          importedAt: new Date((data.deck_metadata as {importedAt: string}).importedAt),
         } : undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at),
@@ -129,32 +144,32 @@ export function useSupabase(): UseSupabaseReturn {
       // Prepare data for database
       const dbData: GameSessionInsert = {
         session_id: sessionId,
-        deck_state: {
+        deck_state: JSON.parse(JSON.stringify({
           cards: state.deck.cards,
           originalCount: state.deck.originalCount,
           name: state.deck.name,
-        },
-        hand_state: {
+        })),
+        hand_state: JSON.parse(JSON.stringify({
           cards: state.hand.cards,
           maxSize: state.hand.maxSize,
-        },
-        playfield_state: {
+        })),
+        playfield_state: JSON.parse(JSON.stringify({
           cards: state.playfield.cards,
           positions: Object.fromEntries(state.playfield.positions),
           rotations: Object.fromEntries(state.playfield.rotations),
           nextZIndex: state.playfield.nextZIndex,
-        },
-        deck_metadata: state.deckMetadata ? {
+        })),
+        deck_metadata: state.deckMetadata ? JSON.parse(JSON.stringify({
           name: state.deckMetadata.name,
           originalCardCount: state.deckMetadata.originalCardCount,
           importedAt: state.deckMetadata.importedAt.toISOString(),
-        } : undefined,
+        })) : undefined,
       };
 
       // Upsert (insert or update)
       const { error: upsertError } = await supabase
         .from('game_sessions')
-        .upsert(dbData as never, {
+        .upsert(dbData, {
           onConflict: 'session_id',
         });
 
